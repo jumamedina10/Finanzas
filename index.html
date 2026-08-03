@@ -1043,12 +1043,7 @@ function App() {
                     })}
                   </div>
 
-                  {history.length < 1 ? (
-                    <div style={{ textAlign:"center", padding:"20px 0", color:C.textDim, fontSize:11 }}>
-                      Necesitas al menos 1 mes cerrado para ver la evolucion
-                    </div>
-                  ) : (
-                    <div>
+                  <div>
                       <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:150, overflow:"visible" }}>
                         {/* Grid horizontal */}
                         {gridVals.map((v,i)=>{
@@ -1071,13 +1066,17 @@ function App() {
                             return hc ? {x:px(i), y:py(Math.min(hc.balance,MAX_BAL)), v:hc.balance} : null;
                           }).filter(Boolean);
                           cardPts.push({x:px(labels.length-1), y:py(Math.min(card.balance,MAX_BAL)), v:card.balance});
-                          if (cardPts.length < 2) return null;
                           const dLine = cardPts.map((p,i)=>`${i===0?"M":"L"}${p.x},${p.y}`).join(" ");
                           return (
                             <g key={card.id}>
-                              <path d={dLine} fill="none" stroke={card.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              {cardPts.length >= 2 && (
+                                <path d={dLine} fill="none" stroke={card.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              )}
                               {cardPts.map((p,i)=>(
-                                <circle key={i} cx={p.x} cy={p.y} r={3} fill={card.color} stroke={C.bgCard} strokeWidth="1"/>
+                                <g key={i}>
+                                  <circle cx={p.x} cy={p.y} r={4} fill={card.color} stroke={C.bgCard} strokeWidth="1.5"/>
+                                  <text x={p.x} y={p.y-8} textAnchor="middle" fontSize="5.5" fill={card.color}>${Math.round(p.v/100)/10}k</text>
+                                </g>
                               ))}
                             </g>
                           );
@@ -1102,9 +1101,13 @@ function App() {
                           );
                         })}
                       </div>
-                      <div style={{ fontSize:9, color:C.textDim, marginTop:8, textAlign:"right" }}>* mes actual · tope $5,000</div>
+                      {history.length===0 && (
+                        <div style={{ fontSize:9, color:C.textDim, marginTop:8, textAlign:"center" }}>
+                          Cierra tu primer mes para ver la evolucion en el tiempo
+                        </div>
+                      )}
+                      <div style={{ fontSize:9, color:C.textDim, marginTop:4, textAlign:"right" }}>* mes actual · tope $5,000</div>
                     </div>
-                  )}
                 </div>
               );
             })()}
