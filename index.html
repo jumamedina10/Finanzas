@@ -9,7 +9,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0c0b09; }
+    body { background: #080e0e; }
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
     input[type=number] { -moz-appearance: textfield; }
@@ -28,21 +28,20 @@ const KEY = "jm_v7";
 const FONT = "'Palatino Linotype','Book Antiqua',Palatino,serif";
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
-// Paleta refinada: teal-slate como protagonista, dorado solo como acento suave
 const C = {
-  primary:   "#5eaaa8",   // teal apagado — color principal
-  accent:    "#a07850",   // dorado oscuro — solo acento, no protagonista
-  positive:  "#43aa8b",   // verde para ingresos / bien
-  negative:  "#e05a5a",   // rojo suave
-  warning:   "#d4895a",   // naranja suave
-  text:      "#dde4e3",   // texto principal (frío, no cálido)
-  textMid:   "#6a7e7d",   // texto secundario
-  textDim:   "#3a4e4d",   // texto muy apagado
-  bg:        "#080e0e",   // fondo principal (casi negro con tinte teal)
-  bgCard:    "#0d1515",   // fondo tarjetas
-  bgDeep:    "#070c0c",   // fondo más oscuro
-  border:    "#162020",   // bordes
-  borderMid: "#1e2e2e",   // bordes más visibles
+  primary:   "#5eaaa8",
+  accent:    "#a07850",
+  positive:  "#43aa8b",
+  negative:  "#e05a5a",
+  warning:   "#d4895a",
+  text:      "#dde4e3",
+  textMid:   "#6a7e7d",
+  textDim:   "#3a4e4d",
+  bg:        "#080e0e",
+  bgCard:    "#0d1515",
+  bgDeep:    "#070c0c",
+  border:    "#162020",
+  borderMid: "#1e2e2e",
 };
 
 const load = () => { try { const r = localStorage.getItem(KEY); return r ? JSON.parse(r) : null; } catch { return null; } };
@@ -53,33 +52,33 @@ const usagePct = (b, l) => l > 0 ? Math.min(100, Math.round((b/l)*100)) : 0;
 const usageColor = p => p >= 90 ? C.negative : p >= 70 ? C.warning : p >= 30 ? C.primary : C.positive;
 
 const INIT_CARDS = [
-  { id:"boa",      name:"Bank of America", color:C.negative, limit:2000, balance:602.71,  statBal:602.71,  minPay:0,  dueDay:3,  cutDay:6,   notes:"" },
-  { id:"sapphire", name:"Chase Sapphire",  color:"#4361ee", limit:5000, balance:3368.16, statBal:3368.16, minPay:0,  dueDay:6,  cutDay:0,   notes:"" },
-  { id:"capone",   name:"Capital One",     color:"#7209b7", limit:3500, balance:1047.87, statBal:1047.87, minPay:0,  dueDay:27, cutDay:0,   notes:"" },
-  { id:"amazon",   name:"Amazon (Chase)",  color:"#f77f00", limit:1000, balance:295.26,  statBal:86.90,   minPay:35, dueDay:14, cutDay:0,   notes:"Statement $86.90" },
+  { id:"boa",      name:"Bank of America", color:C.negative, limit:2000,  balance:602.71,  statBal:602.71,  minPay:0,  dueDay:3,  cutDay:6,  notes:"" },
+  { id:"sapphire", name:"Chase Sapphire",  color:"#4361ee",  limit:5000,  balance:3368.16, statBal:3368.16, minPay:0,  dueDay:6,  cutDay:0,  notes:"" },
+  { id:"capone",   name:"Capital One",     color:"#7209b7",  limit:3500,  balance:1047.87, statBal:1047.87, minPay:0,  dueDay:27, cutDay:0,  notes:"" },
+  { id:"amazon",   name:"Amazon (Chase)",  color:"#f77f00",  limit:1000,  balance:295.26,  statBal:86.90,   minPay:35, dueDay:14, cutDay:0,  notes:"Statement $86.90" },
 ];
 
 const INIT_LOANS = [
   { id:"penfed", name:"PenFed", color:"#06b6d4", original:5000, balance:4041,    payment:164.10, apr:18.5,  dueDay:1,  notes:"Pago total $264.10 · mi parte $164.10" },
-  { id:"sofi",   name:"SoFi",   color:"#8b5cf6", original:7000, balance:6869.18, payment:250,    apr:32.75, dueDay:12, notes:"Mínimo $238.31 · pagando $250" },
+  { id:"sofi",   name:"SoFi",   color:"#8b5cf6", original:7000, balance:6869.18, payment:250,    apr:32.75, dueDay:12, notes:"Minimo $238.31 · pagando $250" },
 ];
 
 const INIT_EXPENSES = [
-  { id:1,  name:"Seguro médico",    amount:112.43, cat:"fijo",        dueDay:1,  paid:false, abonado:0, notes:"" },
-  { id:2,  name:"Alimentación",     amount:300,    cat:"fijo",        dueDay:1,  paid:false, abonado:0, notes:"" },
-  { id:3,  name:"Papá",             amount:60,     cat:"fijo",        dueDay:1,  paid:false, abonado:0, notes:"" },
-  { id:4,  name:"Cuenta conjunta",  amount:150,    cat:"fijo",        dueDay:1,  paid:false, abonado:0, notes:"mínimo" },
-  { id:5,  name:"Colombia (envío)", amount:200,    cat:"fijo",        dueDay:1,  paid:false, abonado:0, notes:"≈ $810,000 COP" },
+  { id:1,  name:"Seguro medico",    amount:112.43, cat:"fijo",        dueDay:1,  paid:false, abonado:0, notes:"" },
+  { id:2,  name:"Alimentacion",     amount:300,    cat:"fijo",        dueDay:1,  paid:false, abonado:0, notes:"" },
+  { id:3,  name:"Papa",             amount:60,     cat:"fijo",        dueDay:1,  paid:false, abonado:0, notes:"" },
+  { id:4,  name:"Cuenta conjunta",  amount:150,    cat:"fijo",        dueDay:1,  paid:false, abonado:0, notes:"minimo" },
+  { id:5,  name:"Colombia (envio)", amount:200,    cat:"fijo",        dueDay:1,  paid:false, abonado:0, notes:"" },
   { id:6,  name:"Pago Urgencias",   amount:30,     cat:"fijo",        dueDay:5,  paid:false, abonado:0, notes:"" },
   { id:7,  name:"Credit Builder",   amount:40,     cat:"fijo",        dueDay:9,  paid:false, abonado:0, notes:"" },
-  { id:8,  name:"Teléfono",         amount:247.37, cat:"fijo",        dueDay:10, paid:false, abonado:0, notes:"" },
-  { id:9,  name:"PenFed (cuota)",   amount:164.10, cat:"fijo",        dueDay:1,  paid:false, abonado:0, notes:"préstamo" },
-  { id:10, name:"SoFi (cuota)",     amount:250,    cat:"fijo",        dueDay:12, paid:false, abonado:0, notes:"préstamo" },
+  { id:8,  name:"Telefono",         amount:247.37, cat:"fijo",        dueDay:10, paid:false, abonado:0, notes:"" },
+  { id:9,  name:"PenFed (cuota)",   amount:164.10, cat:"fijo",        dueDay:1,  paid:false, abonado:0, notes:"prestamo" },
+  { id:10, name:"SoFi (cuota)",     amount:250,    cat:"fijo",        dueDay:12, paid:false, abonado:0, notes:"prestamo" },
   { id:11, name:"SAE",              amount:100,    cat:"fijo",        dueDay:19, paid:false, abonado:0, notes:"" },
   { id:12, name:"Pago BofA",        amount:0,      cat:"tarjeta",     dueDay:3,  paid:false, abonado:0, notes:"Bank of America", cardId:"boa" },
   { id:13, name:"Pago Sapphire",    amount:0,      cat:"tarjeta",     dueDay:6,  paid:false, abonado:0, notes:"Chase Sapphire",  cardId:"sapphire" },
   { id:14, name:"Pago Capital One", amount:0,      cat:"tarjeta",     dueDay:27, paid:false, abonado:0, notes:"Capital One",     cardId:"capone" },
-  { id:15, name:"Pago Amazon",      amount:35,     cat:"tarjeta",     dueDay:14, paid:false, abonado:0, notes:"Amazon · mín $35", cardId:"amazon" },
+  { id:15, name:"Pago Amazon",      amount:35,     cat:"tarjeta",     dueDay:14, paid:false, abonado:0, notes:"Amazon min $35",  cardId:"amazon" },
   { id:20, name:"Sivo",             amount:18,     cat:"suscripcion", dueDay:7,  paid:false, abonado:0, notes:"" },
   { id:21, name:"AppleCare",        amount:20,     cat:"suscripcion", dueDay:9,  paid:false, abonado:0, notes:"" },
   { id:22, name:"ChatGPT",          amount:20,     cat:"suscripcion", dueDay:14, paid:false, abonado:0, notes:"" },
@@ -94,7 +93,7 @@ const INIT_EXPENSES = [
   { id:31, name:"iCloud",           amount:10,     cat:"suscripcion", dueDay:30, paid:false, abonado:0, notes:"" },
 ];
 
-// ── Editable inline field ──────────────────────────────────────
+// ── Editable inline ────────────────────────────────────────────
 function Editable({ value, onSave, color, type="number" }) {
   const clr = color || C.primary;
   const [editing, setEditing] = useState(false);
@@ -113,14 +112,13 @@ function Editable({ value, onSave, color, type="number" }) {
   );
 }
 
-// ── Expense row ────────────────────────────────────────────────
+// ── ExpRow ─────────────────────────────────────────────────────
 function ExpRow({ e, cards, onToggle, onAbono, onDelete, onAmountSave, onDaySave }) {
   const abonado = e.abonado || (e.paid ? e.amount : 0);
   const partial = abonado > 0 && abonado < e.amount;
   const partPct = e.amount > 0 ? Math.round((abonado / e.amount) * 100) : 0;
   const cardMatch = e.cardId ? cards.find(c => c.id === e.cardId) : null;
   const dotColor = e.cat==="tarjeta" ? (cardMatch?.color||C.primary) : e.cat==="suscripcion" ? "#7c6ed4" : C.primary;
-
   return (
     <div style={{ padding:"11px 0", borderBottom:`1px solid ${C.border}`, opacity:e.paid?0.35:1 }}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
@@ -131,13 +129,13 @@ function ExpRow({ e, cards, onToggle, onAbono, onDelete, onAmountSave, onDaySave
             border: e.paid ? "none" : partial ? `1.5px solid ${C.warning}` : `1.5px solid ${dotColor}`,
             background: e.paid ? dotColor : partial ? C.warning+"22" : "transparent"
           }}>
-            {e.paid   && <span style={{ color:C.bg, fontSize:11, fontWeight:"bold" }}>✓</span>}
-            {partial  && <span style={{ color:C.warning, fontSize:11, fontWeight:"bold" }}>~</span>}
+            {e.paid  && <span style={{ color:C.bg, fontSize:11, fontWeight:"bold" }}>v</span>}
+            {partial && <span style={{ color:C.warning, fontSize:11, fontWeight:"bold" }}>~</span>}
           </button>
           <div>
             <div style={{ fontSize:13, textDecoration:e.paid?"line-through":"none" }}>{e.name}</div>
             <div style={{ fontSize:10, color:C.textDim }}>
-              Día <Editable value={e.dueDay} onSave={v => onDaySave(e.id, Math.max(1,Math.min(31,Math.round(v))))} color={C.textMid} />
+              Dia <Editable value={e.dueDay} onSave={v => onDaySave(e.id, Math.max(1,Math.min(31,Math.round(v))))} color={C.textMid} />
               {e.notes ? ` · ${e.notes}` : ""}
             </div>
           </div>
@@ -148,7 +146,7 @@ function ExpRow({ e, cards, onToggle, onAbono, onDelete, onAmountSave, onDaySave
             {partial && <div style={{ fontSize:9, color:C.warning }}>abonado {usd(abonado)}</div>}
           </div>
           <button onClick={() => onAbono(e)} style={{ background:C.bgCard, border:`1px solid ${C.borderMid}`, borderRadius:6, color:C.textMid, cursor:"pointer", fontSize:11, padding:"3px 7px" }}>$+</button>
-          <button onClick={() => onDelete(e.id)} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", fontSize:18, padding:"0 2px" }}>×</button>
+          <button onClick={() => onDelete(e.id)} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", fontSize:18, padding:"0 2px" }}>x</button>
         </div>
       </div>
       {partial && (
@@ -160,29 +158,22 @@ function ExpRow({ e, cards, onToggle, onAbono, onDelete, onAmountSave, onDaySave
   );
 }
 
-
 // ── DonutChart ─────────────────────────────────────────────────
 function DonutChart({ data, size=180, thickness=36 }) {
   const total = data.reduce((a,d)=>a+d.value,0);
   if (total===0) return null;
-  const cx = size/2, cy = size/2, r = (size - thickness)/2;
-  const circumference = 2 * Math.PI * r;
-  let offset = 0;
+  const cx=size/2, cy=size/2, r=(size-thickness)/2;
+  const circ = 2*Math.PI*r;
+  let offset=0;
   const slices = data.map(d => {
-    const pct = d.value / total;
-    const dash = pct * circumference;
-    const gap = circumference - dash;
-    const slice = { ...d, dash, gap, offset, pct };
-    offset += dash;
-    return slice;
+    const dash=(d.value/total)*circ, gap=circ-dash;
+    const s={...d,dash,gap,offset}; offset+=dash; return s;
   });
   return (
     <svg width={size} height={size} style={{ transform:"rotate(-90deg)" }}>
       {slices.map((s,i) => (
-        <circle key={i} cx={cx} cy={cy} r={r}
-          fill="none" stroke={s.color} strokeWidth={thickness}
-          strokeDasharray={`${s.dash} ${s.gap}`}
-          strokeDashoffset={-s.offset}
+        <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={s.color} strokeWidth={thickness}
+          strokeDasharray={`${s.dash} ${s.gap}`} strokeDashoffset={-s.offset}
           style={{ transition:"stroke-dasharray .5s" }} />
       ))}
     </svg>
@@ -190,8 +181,8 @@ function DonutChart({ data, size=180, thickness=36 }) {
 }
 
 // ── BarChart ────────────────────────────────────────────────────
-function BarChart({ bars, maxVal }) {
-  const max = maxVal || Math.max(...bars.map(b=>Math.max(b.a,b.b)), 1);
+function BarChart({ bars }) {
+  const max = Math.max(...bars.map(b=>Math.max(b.a,b.b)), 1);
   return (
     <div style={{ display:"flex", alignItems:"flex-end", gap:8, height:120, padding:"0 4px" }}>
       {bars.map((b,i) => (
@@ -200,7 +191,7 @@ function BarChart({ bars, maxVal }) {
             <div style={{ flex:1, background:C.positive, borderRadius:"3px 3px 0 0", height:`${(b.a/max)*100}%`, minHeight:b.a>0?2:0, transition:"height .5s" }} />
             <div style={{ flex:1, background:C.negative, borderRadius:"3px 3px 0 0", height:`${(b.b/max)*100}%`, minHeight:b.b>0?2:0, transition:"height .5s" }} />
           </div>
-          <div style={{ fontSize:8, color:C.textDim, textAlign:"center", letterSpacing:0.5 }}>{b.label}</div>
+          <div style={{ fontSize:8, color:C.textDim, textAlign:"center" }}>{b.label}</div>
         </div>
       ))}
     </div>
@@ -210,17 +201,13 @@ function BarChart({ bars, maxVal }) {
 // ── LineChart ───────────────────────────────────────────────────
 function LineChart({ points, color="#4361ee" }) {
   if (points.length < 2) return (
-    <div style={{ textAlign:"center", padding:"30px 0", color:C.textDim, fontSize:11 }}>
-      Necesitas al menos 2 meses cerrados
-    </div>
+    <div style={{ textAlign:"center", padding:"30px 0", color:C.textDim, fontSize:11 }}>Necesitas al menos 2 meses cerrados</div>
   );
   const W=300, H=100, pad=10;
-  const vals = points.map(p=>p.v);
-  const minV = Math.min(...vals), maxV = Math.max(...vals);
-  const range = maxV - minV || 1;
-  const px = (i) => pad + (i/(points.length-1))*(W-pad*2);
-  const py = (v) => H - pad - ((v-minV)/range)*(H-pad*2);
-  const d = points.map((p,i)=>`${i===0?"M":"L"}${px(i)},${py(p.v)}`).join(" ");
+  const vals=points.map(p=>p.v), minV=Math.min(...vals), maxV=Math.max(...vals), range=maxV-minV||1;
+  const px=i=>pad+(i/(points.length-1))*(W-pad*2);
+  const py=v=>H-pad-((v-minV)/range)*(H-pad*2);
+  const d=points.map((p,i)=>`${i===0?"M":"L"}${px(i)},${py(p.v)}`).join(" ");
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:100, overflow:"visible" }}>
       <defs>
@@ -229,7 +216,7 @@ function LineChart({ points, color="#4361ee" }) {
           <stop offset="100%" stopColor={color} stopOpacity="0"/>
         </linearGradient>
       </defs>
-      <path d={d + ` L${px(points.length-1)},${H} L${px(0)},${H} Z`} fill="url(#lg)" />
+      <path d={d+` L${px(points.length-1)},${H} L${px(0)},${H} Z`} fill="url(#lg)" />
       <path d={d} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       {points.map((p,i) => (
         <g key={i}>
@@ -241,7 +228,7 @@ function LineChart({ points, color="#4361ee" }) {
   );
 }
 
-// ── Main App ───────────────────────────────────────────────────
+// ── App ────────────────────────────────────────────────────────
 function App() {
   const saved = load();
 
@@ -253,20 +240,28 @@ function App() {
   const [expenses,     setExpenses]     = useState(saved?.expenses     ?? INIT_EXPENSES);
   const [income,       setIncome]       = useState(saved?.income       ?? []);
   const [history,      setHistory]      = useState(saved?.history      ?? []);
-  const [currentMonth, setCurrentMonth] = useState(saved?.currentMonth ?? "Abril 2025");
+  const [currentMonth, setCurrentMonth] = useState(saved?.currentMonth ?? "Agosto 2025");
+  const [quickSpends,  setQuickSpends]  = useState(saved?.quickSpends  ?? []);
+  const [monthGoal,    setMonthGoal]    = useState(saved?.monthGoal    ?? 0);
+  const [plannerItems, setPlannerItems] = useState(saved?.plannerItems ?? []);
+  const [appNotes,     setAppNotes]     = useState(saved?.appNotes     ?? []);
 
+  // UI state
   const [showAddExp,   setShowAddExp]   = useState(false);
   const [showAddInc,   setShowAddInc]   = useState(false);
   const [showAddLoan,  setShowAddLoan]  = useState(false);
   const [showAddCard,  setShowAddCard]  = useState(false);
+  const [showQuick,    setShowQuick]    = useState(false);
+  const [showPlanner,  setShowPlanner]  = useState(false);
+  const [showNotes,    setShowNotes]    = useState(false);
+  const [activeCards, setActiveCards] = useState(null); // null = todas activas
   const [newLoan,      setNewLoan]      = useState({ name:"", original:"", balance:"", payment:"", apr:"", dueDay:1, notes:"" });
   const [newCard,      setNewCard]      = useState({ name:"", limit:"", balance:"", minPay:"", dueDay:1, cutDay:0, notes:"" });
-  const [quickSpends,  setQuickSpends]  = useState(saved?.quickSpends ?? []);
-  const [showQuick,    setShowQuick]    = useState(false);
   const [newQuick,     setNewQuick]     = useState({ name:"", amount:"", method:"debit", notes:"" });
   const [newExp,       setNewExp]       = useState({ name:"", amount:"", cat:"variable", dueDay:1, notes:"" });
   const [newInc,       setNewInc]       = useState({ name:"", amount:"", date:"", notes:"" });
-
+  const [newPlanItem,  setNewPlanItem]  = useState({ name:"", amount:"", cat:"fijo", dueDay:1, notes:"" });
+  const [newNote,      setNewNote]      = useState("");
   const [abonoModal,   setAbonoModal]   = useState(null);
   const [abonoInput,   setAbonoInput]   = useState("");
   const [histDetail,   setHistDetail]   = useState(null);
@@ -275,63 +270,63 @@ function App() {
   const [importText,   setImportText]   = useState("");
   const [importError,  setImportError]  = useState("");
   const [closeNote,    setCloseNote]    = useState("");
-  const [monthGoal,    setMonthGoal]    = useState(saved?.monthGoal ?? 0);
-  const [showPlanner,  setShowPlanner]  = useState(false);
-  const [plannerItems, setPlannerItems] = useState(saved?.plannerItems ?? []);
-  const [newPlanItem,  setNewPlanItem]  = useState({ name:"", amount:"", cat:"fijo", dueDay:1, notes:"" });
 
   useEffect(() => {
-    persist({ checking, savings, cards, loans, expenses, income, history, currentMonth, monthGoal, plannerItems, quickSpends });
-  }, [checking, savings, cards, loans, expenses, income, history, currentMonth, monthGoal, plannerItems]);
+    persist({ checking, savings, cards, loans, expenses, income, history, currentMonth, monthGoal, plannerItems, quickSpends, appNotes });
+  }, [checking, savings, cards, loans, expenses, income, history, currentMonth, monthGoal, plannerItems, quickSpends, appNotes]);
 
-  // ── Derived values ───────────────────────────────────────────
-  const totalExp    = expenses.reduce((a, e) => a + e.amount, 0);
-  const totalPaid   = expenses.reduce((a, e) => a + (e.abonado || (e.paid ? e.amount : 0)), 0);
-  const totalPend   = totalExp - totalPaid;
-  const totalIncome = income.reduce((a, i) => a + i.amount, 0);
-  const cardDebt    = cards.reduce((a, c) => a + c.balance, 0);
-  const loanDebt    = loans.reduce((a, l) => a + l.balance, 0);
-  const totalDebt   = cardDebt + loanDebt;
-  const totalLimit  = cards.reduce((a, c) => a + c.limit, 0);
-  const overUsage   = usagePct(cardDebt, totalLimit);
-  const netWorth    = checking + savings - totalDebt;
-  const runway      = totalExp > 0 ? checking / totalExp : 99;
-  const prevMonth   = history.length > 0 ? history[0] : null;
-  const goalPct     = monthGoal > 0 ? Math.min(100, Math.round((totalIncome/monthGoal)*100)) : 0;
+  // Derived
+  const totalExp    = expenses.reduce((a,e)=>a+e.amount,0);
+  const totalPaid   = expenses.reduce((a,e)=>a+(e.abonado||(e.paid?e.amount:0)),0);
+  const totalPend   = totalExp-totalPaid;
+  const totalIncome = income.reduce((a,i)=>a+i.amount,0);
+  const cardDebt    = cards.reduce((a,c)=>a+c.balance,0);
+  const loanDebt    = loans.reduce((a,l)=>a+l.balance,0);
+  const totalDebt   = cardDebt+loanDebt;
+  const totalLimit  = cards.reduce((a,c)=>a+c.limit,0);
+  const overUsage   = usagePct(cardDebt,totalLimit);
+  const netWorth    = checking+savings-totalDebt;
+  const runway      = totalExp>0?checking/totalExp:99;
 
-  // ── Actions ──────────────────────────────────────────────────
-  const updCard    = (id, f, v) => setCards(p => p.map(c => c.id===id ? {...c, [f]:v} : c));
-  const updLoan    = (id, f, v) => setLoans(p => p.map(l => l.id===id ? {...l, [f]:v} : l));
-  const updExpAmount = (id, v) => setExpenses(p => p.map(e => e.id===id ? {...e, amount:v, abonado: e.paid ? v : e.abonado} : e));
-  const updExpDay  = (id, v) => setExpenses(p => p.map(e => e.id===id ? {...e, dueDay:v} : e));
-  const togglePaid = id => setExpenses(p => p.map(e => e.id===id ? {...e, paid:!e.paid, abonado:e.paid?0:e.amount} : e));
-  const delExp     = id => setExpenses(p => p.filter(e => e.id!==id));
-  const delInc     = id => setIncome(p => p.filter(i => i.id!==id));
-
-  const openAbono = e => { setAbonoModal(e); setAbonoInput(String(e.abonado||"")); };
-  const addPlanItem = () => {
-    if (!newPlanItem.name || !newPlanItem.amount) return;
-    setPlannerItems(p => [...p, {...newPlanItem, amount:parseFloat(newPlanItem.amount)}]);
-    setNewPlanItem({ name:"", amount:"", cat:"fijo", dueDay:1, notes:"" });
+  // Actions
+  const updCard      = (id,f,v) => setCards(p=>p.map(c=>c.id===id?{...c,[f]:v}:c));
+  const updLoan      = (id,f,v) => setLoans(p=>p.map(l=>l.id===id?{...l,[f]:v}:l));
+  const updExpAmount = (id,v)   => setExpenses(p=>p.map(e=>e.id===id?{...e,amount:v,abonado:e.paid?v:e.abonado}:e));
+  const updExpDay    = (id,v)   => setExpenses(p=>p.map(e=>e.id===id?{...e,dueDay:v}:e));
+  const togglePaid   = id       => setExpenses(p=>p.map(e=>e.id===id?{...e,paid:!e.paid,abonado:e.paid?0:e.amount}:e));
+  const delExp       = id       => setExpenses(p=>p.filter(e=>e.id!==id));
+  const delInc       = id       => setIncome(p=>p.filter(i=>i.id!==id));
+  const delCard      = id       => {
+    setCards(p=>p.filter(c=>c.id!==id));
+    setExpenses(p=>p.filter(e=>e.cardId!==id));
   };
-  const delPlanItem = idx => setPlannerItems(p => p.filter((_,i)=>i!==idx));
-  const saveAbono = () => {
+  const delLoan      = id       => setLoans(p=>p.filter(l=>l.id!==id));
+
+  const openAbono  = e => { setAbonoModal(e); setAbonoInput(String(e.abonado||"")); };
+  const saveAbono  = () => {
     const v = Math.min(parseFloat(abonoInput)||0, abonoModal.amount);
-    setExpenses(p => p.map(e => e.id===abonoModal.id ? {...e, abonado:v, paid:v>=e.amount} : e));
+    setExpenses(p=>p.map(e=>e.id===abonoModal.id?{...e,abonado:v,paid:v>=e.amount}:e));
     setAbonoModal(null);
   };
 
+  const addPlanItem = () => {
+    if (!newPlanItem.name||!newPlanItem.amount) return;
+    setPlannerItems(p=>[...p,{...newPlanItem,amount:parseFloat(newPlanItem.amount)}]);
+    setNewPlanItem({name:"",amount:"",cat:"fijo",dueDay:1,notes:""});
+  };
+  const delPlanItem = idx => setPlannerItems(p=>p.filter((_,i)=>i!==idx));
+
   const addExp = () => {
-    if (!newExp.name || !newExp.amount) return;
-    setExpenses(p => [...p, {...newExp, id:Date.now(), amount:parseFloat(newExp.amount), paid:false, abonado:0}]);
-    setNewExp({ name:"", amount:"", cat:"variable", dueDay:1, notes:"" });
+    if (!newExp.name||!newExp.amount) return;
+    setExpenses(p=>[...p,{...newExp,id:Date.now(),amount:parseFloat(newExp.amount),paid:false,abonado:0}]);
+    setNewExp({name:"",amount:"",cat:"variable",dueDay:1,notes:""});
     setShowAddExp(false);
   };
 
   const addInc = () => {
-    if (!newInc.name || !newInc.amount) return;
-    setIncome(p => [...p, {...newInc, id:Date.now(), amount:parseFloat(newInc.amount)}]);
-    setNewInc({ name:"", amount:"", date:"", notes:"" });
+    if (!newInc.name||!newInc.amount) return;
+    setIncome(p=>[...p,{...newInc,id:Date.now(),amount:parseFloat(newInc.amount)}]);
+    setNewInc({name:"",amount:"",date:"",notes:""});
     setShowAddInc(false);
   };
 
@@ -339,83 +334,76 @@ function App() {
   const CARD_COLORS = ["#e63946","#4361ee","#7209b7","#f77f00","#43aa8b","#06b6d4"];
 
   const addLoan = () => {
-    if (!newLoan.name || !newLoan.balance || !newLoan.payment) return;
-    const orig = parseFloat(newLoan.original) || parseFloat(newLoan.balance);
-    const color = LOAN_COLORS[loans.length % LOAN_COLORS.length];
-    setLoans(p => [...p, { id:"loan_"+Date.now(), name:newLoan.name, color, original:orig, balance:parseFloat(newLoan.balance), payment:parseFloat(newLoan.payment), apr:parseFloat(newLoan.apr)||0, dueDay:parseInt(newLoan.dueDay)||1, notes:newLoan.notes }]);
-    setNewLoan({ name:"", original:"", balance:"", payment:"", apr:"", dueDay:1, notes:"" });
+    if (!newLoan.name||!newLoan.balance||!newLoan.payment) return;
+    const orig = parseFloat(newLoan.original)||parseFloat(newLoan.balance);
+    const color = LOAN_COLORS[loans.length%LOAN_COLORS.length];
+    setLoans(p=>[...p,{id:"loan_"+Date.now(),name:newLoan.name,color,original:orig,balance:parseFloat(newLoan.balance),payment:parseFloat(newLoan.payment),apr:parseFloat(newLoan.apr)||0,dueDay:parseInt(newLoan.dueDay)||1,notes:newLoan.notes}]);
+    setNewLoan({name:"",original:"",balance:"",payment:"",apr:"",dueDay:1,notes:""});
     setShowAddLoan(false);
   };
 
   const addCard = () => {
-    if (!newCard.name || !newCard.limit) return;
-    const color = CARD_COLORS[cards.length % CARD_COLORS.length];
-    setCards(p => [...p, { id:"card_"+Date.now(), name:newCard.name, color, limit:parseFloat(newCard.limit), balance:parseFloat(newCard.balance)||0, statBal:parseFloat(newCard.balance)||0, minPay:parseFloat(newCard.minPay)||0, dueDay:parseInt(newCard.dueDay)||1, cutDay:parseInt(newCard.cutDay)||0, notes:newCard.notes }]);
-    setNewCard({ name:"", limit:"", balance:"", minPay:"", dueDay:1, cutDay:0, notes:"" });
+    if (!newCard.name||!newCard.limit) return;
+    const color = CARD_COLORS[cards.length%CARD_COLORS.length];
+    const newC = {id:"card_"+Date.now(),name:newCard.name,color,limit:parseFloat(newCard.limit),balance:parseFloat(newCard.balance)||0,statBal:parseFloat(newCard.balance)||0,minPay:parseFloat(newCard.minPay)||0,dueDay:parseInt(newCard.dueDay)||1,cutDay:parseInt(newCard.cutDay)||0,notes:newCard.notes};
+    setCards(p=>[...p,newC]);
+    // auto-add gasto tarjeta
+    setExpenses(p=>[...p,{id:Date.now()+1,name:"Pago "+newCard.name,amount:parseFloat(newCard.minPay)||0,cat:"tarjeta",dueDay:parseInt(newCard.dueDay)||1,paid:false,abonado:0,notes:newCard.name,cardId:newC.id}]);
+    setNewCard({name:"",limit:"",balance:"",minPay:"",dueDay:1,cutDay:0,notes:""});
     setShowAddCard(false);
   };
 
   const addQuickSpend = () => {
-    if (!newQuick.name || !newQuick.amount) return;
-    const spend = { id:Date.now(), name:newQuick.name, amount:parseFloat(newQuick.amount), method:newQuick.method, notes:newQuick.notes, date:new Date().toLocaleDateString("es",{day:"numeric",month:"short"}) };
-    setQuickSpends(p => [spend, ...p]);
-    setNewQuick({ name:"", amount:"", method:"debit", notes:"" });
+    if (!newQuick.name||!newQuick.amount) return;
+    const spend={id:Date.now(),name:newQuick.name,amount:parseFloat(newQuick.amount),method:newQuick.method,notes:newQuick.notes,date:new Date().toLocaleDateString("es",{day:"numeric",month:"short"})};
+    setQuickSpends(p=>[spend,...p]);
+    setNewQuick({name:"",amount:"",method:"debit",notes:""});
   };
-  const delQuickSpend = id => setQuickSpends(p => p.filter(s => s.id !== id));
+  const delQuickSpend = id => setQuickSpends(p=>p.filter(s=>s.id!==id));
+
+  const addAppNote = () => {
+    if (!newNote.trim()) return;
+    setAppNotes(p=>[{id:Date.now(),text:newNote.trim(),date:new Date().toLocaleDateString("es",{day:"numeric",month:"short",year:"numeric"})},...p]);
+    setNewNote("");
+  };
+  const delAppNote = id => setAppNotes(p=>p.filter(n=>n.id!==id));
 
   const closeMonth = () => {
-    const snap = {
-      id: Date.now(), label: currentMonth,
-      checking, savings, totalIncome, totalExp, totalPaid,
-      cardDebt, loanDebt, netWorth, note: closeNote,
-      income:[...income], expenses:[...expenses], cards:[...cards], loans:[...loans],
-    };
-    setHistory(p => [snap, ...p]);
-    // Apply planner items as new expenses for next month
-    const baseExp = expenses.filter(e => e.cat!=="variable").map(e => ({...e, paid:false, abonado:0}));
-    const plannerExp = plannerItems.map(p => ({...p, id:Date.now()+Math.random(), paid:false, abonado:0}));
-    setExpenses([...baseExp, ...plannerExp]);
-    setPlannerItems([]);
-    setIncome([]);
-    setQuickSpends([]);
-    setCloseNote("");
-    const parts = currentMonth.split(" ");
-    const mIdx = MONTHS.indexOf(parts[0]);
-    const yr = parseInt(parts[1]);
+    const snap={id:Date.now(),label:currentMonth,checking,savings,totalIncome,totalExp,totalPaid,cardDebt,loanDebt,netWorth,note:closeNote,income:[...income],expenses:[...expenses],cards:[...cards],loans:[...loans]};
+    setHistory(p=>[snap,...p]);
+    const baseExp = expenses.filter(e=>e.cat!=="variable").map(e=>({...e,paid:false,abonado:0}));
+    const plannerExp = plannerItems.map(p=>({...p,id:Date.now()+Math.random(),paid:false,abonado:0}));
+    setExpenses([...baseExp,...plannerExp]);
+    setPlannerItems([]); setIncome([]); setQuickSpends([]); setCloseNote("");
+    const parts=currentMonth.split(" "), mIdx=MONTHS.indexOf(parts[0]), yr=parseInt(parts[1]);
     setCurrentMonth(`${MONTHS[mIdx===11?0:mIdx+1]} ${mIdx===11?yr+1:yr}`);
-    setConfirmClose(false);
-    setTab("gastos");
+    setConfirmClose(false); setTab("gastos");
   };
 
   const exportData = () => {
-    const blob = new Blob([JSON.stringify({ checking, savings, cards, loans, expenses, income, history, currentMonth })], { type:"application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `finanzas-${currentMonth.replace(" ","-")}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const blob=new Blob([JSON.stringify({checking,savings,cards,loans,expenses,income,history,currentMonth,quickSpends,appNotes})],{type:"application/json"});
+    const url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url; a.download=`finanzas-${currentMonth.replace(" ","-")}.json`; a.click(); URL.revokeObjectURL(url);
   };
 
   const importData = () => {
     try {
-      const data = JSON.parse(importText);
-      if (!data.expenses || !data.cards) throw new Error();
-      if (data.checking     !== undefined) setChecking(data.checking);
-      if (data.savings      !== undefined) setSavings(data.savings);
-      if (data.currentMonth !== undefined) setCurrentMonth(data.currentMonth);
-      if (data.cards)    setCards(data.cards);
-      if (data.loans)    setLoans(data.loans);
+      const data=JSON.parse(importText);
+      if (!data.expenses||!data.cards) throw new Error();
+      if (data.checking!==undefined) setChecking(data.checking);
+      if (data.savings!==undefined) setSavings(data.savings);
+      if (data.currentMonth!==undefined) setCurrentMonth(data.currentMonth);
+      if (data.cards) setCards(data.cards);
+      if (data.loans) setLoans(data.loans);
       if (data.expenses) setExpenses(data.expenses);
-      if (data.income)   setIncome(data.income);
-      if (data.history)  setHistory(data.history);
+      if (data.income) setIncome(data.income);
+      if (data.history) setHistory(data.history);
+      if (data.quickSpends) setQuickSpends(data.quickSpends);
+      if (data.appNotes) setAppNotes(data.appNotes);
       setShowImport(false); setImportText(""); setImportError("");
-    } catch {
-      setImportError("Archivo inválido. Copia el contenido completo del archivo .json.");
-    }
+    } catch { setImportError("Archivo invalido. Copia el contenido completo del .json."); }
   };
 
-  // ── Styles ───────────────────────────────────────────────────
   const S = {
     app:   { fontFamily:FONT, background:C.bg, minHeight:"100vh", color:C.text, maxWidth:480, margin:"0 auto", paddingBottom:90 },
     card:  { background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:14, padding:"14px" },
@@ -425,9 +413,10 @@ function App() {
     modal: { position:"fixed", inset:0, background:"#000000cc", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:"0 24px" },
     mbox:  { background:"#0d1818", border:`1px solid ${C.borderMid}`, borderRadius:16, padding:"24px 20px", width:"100%", maxWidth:340 },
     tab:   a => ({ flex:1, padding:"11px 0", background:"none", border:"none", cursor:"pointer", fontSize:9, letterSpacing:1.5, textTransform:"uppercase", fontFamily:FONT, color:a?C.primary:C.textDim, borderBottom:a?`2px solid ${C.primary}`:"2px solid transparent" }),
-    btn:   (bg, fg) => ({ background:bg||C.primary, border:"none", borderRadius:8, padding:"7px 14px", color:fg||C.bg, fontWeight:"bold", cursor:"pointer", fontSize:12, fontFamily:FONT }),
+    btn:   (bg,fg) => ({ background:bg||C.primary, border:"none", borderRadius:8, padding:"7px 14px", color:fg||C.bg, fontWeight:"bold", cursor:"pointer", fontSize:12, fontFamily:FONT }),
     sbtn:  { background:C.bgCard, border:`1px solid ${C.borderMid}`, borderRadius:8, padding:"7px 10px", color:C.textMid, cursor:"pointer", fontSize:11, fontFamily:FONT, fontWeight:"bold" },
     gbtn:  { background:C.bgCard, border:`1px solid ${C.primary}`, borderRadius:8, padding:"7px 10px", color:C.primary, cursor:"pointer", fontSize:11, fontFamily:FONT, fontWeight:"bold" },
+    rbtn:  { background:"none", border:"none", color:C.negative, cursor:"pointer", fontSize:13, padding:"4px 8px", fontFamily:FONT },
   };
 
   const CATS = ["fijo","tarjeta","suscripcion","variable"];
@@ -443,7 +432,7 @@ function App() {
             <div style={{ fontSize:9, letterSpacing:3.5, color:C.textMid, textTransform:"uppercase", marginBottom:2 }}>
               <Editable value={currentMonth} onSave={setCurrentMonth} type="text" color={C.textMid} />
             </div>
-            <div style={{ fontSize:20, fontWeight:"bold" }}>Hola, JuanMa 👋</div>
+            <div style={{ fontSize:20, fontWeight:"bold" }}>Hola, JuanMa</div>
           </div>
           <div style={{ display:"flex", gap:14, alignItems:"flex-start" }}>
             <div style={{ textAlign:"right" }}>
@@ -459,9 +448,9 @@ function App() {
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginTop:14 }}>
           {[
-            { l:"Pagado",    v:usd(totalPaid),   c:C.positive },
-            { l:"Pendiente", v:usd(totalPend),   c:totalPend>checking?C.negative:C.primary },
-            { l:"Ingresos",  v:usd(totalIncome), c:"#7c6ed4" },
+            {l:"Pagado",    v:usd(totalPaid),   c:C.positive},
+            {l:"Pendiente", v:usd(totalPend),   c:totalPend>checking?C.negative:C.primary},
+            {l:"Ingresos",  v:usd(totalIncome), c:"#7c6ed4"},
           ].map((k,i) => (
             <div key={i} style={{ background:C.bgDeep, borderRadius:10, padding:"9px 8px", border:`1px solid ${C.border}` }}>
               <div style={{ fontSize:8, letterSpacing:1.5, color:C.textDim, textTransform:"uppercase", marginBottom:3 }}>{k.l}</div>
@@ -472,21 +461,21 @@ function App() {
       </div>
 
       {/* TABS */}
-      <div style={{ display:"flex", background:"#0e0c08", borderBottom:"1px solid #1a1710" }}>
-        {[["gastos","Gastos"],["ingresos","Ingresos"],["deudas","Deudas"],["resumen","Resumen"],["graficas","Gráficas"],["historial","Historial"]].map(([k,l]) => (
-          <button key={k} style={S.tab(tab===k)} onClick={() => setTab(k)}>{l}</button>
+      <div style={{ display:"flex", background:"#0a1212", borderBottom:`1px solid ${C.border}` }}>
+        {[["gastos","Gastos"],["ingresos","Ingresos"],["deudas","Deudas"],["resumen","Resumen"],["graficas","Graficas"],["historial","Historial"]].map(([k,l]) => (
+          <button key={k} style={S.tab(tab===k)} onClick={()=>setTab(k)}>{l}</button>
         ))}
       </div>
 
       <div style={{ padding:"0 16px" }}>
 
-        {/* ══ GASTOS ══ */}
+        {/* GASTOS */}
         {tab==="gastos" && (
           <div style={{ marginTop:18 }}>
             <div style={{ ...S.card, marginBottom:18 }}>
               <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
                 <span style={S.lbl}>Progreso del mes</span>
-                <span style={{ fontSize:11, color:C.primary }}>{totalExp>0 ? Math.round((totalPaid/totalExp)*100) : 0}%</span>
+                <span style={{ fontSize:11, color:C.primary }}>{totalExp>0?Math.round((totalPaid/totalExp)*100):0}%</span>
               </div>
               <div style={{ height:7, background:C.border, borderRadius:4, overflow:"hidden", marginBottom:10 }}>
                 <div style={{ height:"100%", width:`${totalExp>0?(totalPaid/totalExp)*100:0}%`, background:`linear-gradient(90deg,${C.primary},${C.positive})`, borderRadius:4, transition:"width .5s" }} />
@@ -503,7 +492,7 @@ function App() {
 
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
               <div style={S.lbl}>Todos los gastos</div>
-              <button style={S.btn()} onClick={() => setShowAddExp(!showAddExp)}>+ Agregar</button>
+              <button style={S.btn()} onClick={()=>setShowAddExp(!showAddExp)}>+ Agregar</button>
             </div>
 
             {showAddExp && (
@@ -515,11 +504,11 @@ function App() {
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
                   <select value={newExp.cat} onChange={e=>setNewExp(p=>({...p,cat:e.target.value}))} style={S.inp}>
                     <option value="fijo">Fijo</option>
-                    <option value="suscripcion">Suscripción</option>
+                    <option value="suscripcion">Suscripcion</option>
                     <option value="tarjeta">Tarjeta</option>
                     <option value="variable">Variable</option>
                   </select>
-                  <input placeholder="Día" type="number" value={newExp.dueDay} onChange={e=>setNewExp(p=>({...p,dueDay:parseInt(e.target.value)||1}))} style={S.inp} />
+                  <input placeholder="Dia" type="number" value={newExp.dueDay} onChange={e=>setNewExp(p=>({...p,dueDay:parseInt(e.target.value)||1}))} style={S.inp} />
                 </div>
                 <input placeholder="Notas" value={newExp.notes} onChange={e=>setNewExp(p=>({...p,notes:e.target.value}))} style={{...S.inp,marginBottom:10}} />
                 <button onClick={addExp} style={{...S.btn(),width:"100%",padding:"10px",fontSize:14}}>Guardar</button>
@@ -528,12 +517,9 @@ function App() {
 
             {CATS.map(cat => {
               const list = expenses.filter(e=>e.cat===cat).sort((a,b)=>a.dueDay-b.dueDay);
-              if (!list.length && cat !== "suscripcion") return null;
+              if (!list.length && cat!=="suscripcion") return null;
               const catTotal = list.reduce((a,e)=>a+e.amount,0);
-
-              // Suscripciones tienen su propio botón de agregar
-              const isSub = cat === "suscripcion";
-
+              const isSub = cat==="suscripcion";
               return (
                 <div key={cat} style={{ marginBottom:22 }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
@@ -541,39 +527,32 @@ function App() {
                     <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                       <span style={{ fontSize:12, color:C.primary }}>{usd(catTotal)}</span>
                       {isSub && (
-                        <button
-                          onClick={() => {
-                            const name = prompt("Nombre de la suscripción:");
-                            if (!name) return;
-                            const amtStr = prompt("Monto mensual ($):");
-                            const amount = parseFloat(amtStr);
-                            if (!amount || isNaN(amount)) return;
-                            const dayStr = prompt("Día de cobro (1-31):", "1");
-                            const dueDay = Math.max(1, Math.min(31, parseInt(dayStr)||1));
-                            setExpenses(p => [...p, { id:Date.now(), name, amount, cat:"suscripcion", dueDay, paid:false, abonado:0, notes:"" }]);
-                          }}
-                          style={{ ...S.btn(), padding:"4px 10px", fontSize:11 }}>+ Sub</button>
+                        <button onClick={() => {
+                          const name=prompt("Nombre de la suscripcion:"); if(!name) return;
+                          const amount=parseFloat(prompt("Monto mensual ($):")); if(!amount||isNaN(amount)) return;
+                          const dueDay=Math.max(1,Math.min(31,parseInt(prompt("Dia de cobro (1-31):","1"))||1));
+                          setExpenses(p=>[...p,{id:Date.now(),name,amount,cat:"suscripcion",dueDay,paid:false,abonado:0,notes:""}]);
+                        }} style={{...S.btn(),padding:"4px 10px",fontSize:11}}>+ Sub</button>
                       )}
                     </div>
                   </div>
-                  {list.length === 0 && isSub && (
-                    <div style={{ fontSize:11, color:C.textDim, padding:"10px 0", textAlign:"center" }}>Sin suscripciones — toca + Sub para agregar</div>
+                  {list.length===0&&isSub&&(
+                    <div style={{ fontSize:11, color:C.textDim, padding:"10px 0", textAlign:"center" }}>Sin suscripciones</div>
                   )}
-                  {list.map(e => <ExpRow key={e.id} e={e} cards={cards} onToggle={togglePaid} onAbono={openAbono} onDelete={delExp} onAmountSave={updExpAmount} onDaySave={updExpDay} />)}
+                  {list.map(e=><ExpRow key={e.id} e={e} cards={cards} onToggle={togglePaid} onAbono={openAbono} onDelete={delExp} onAmountSave={updExpAmount} onDaySave={updExpDay} />)}
                 </div>
               );
             })}
 
-            {/* Registro rapido de gastos del dia */}
+            {/* Gastos del dia */}
             <div style={{ marginBottom:22 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
                 <div style={S.lbl}>Gastos del dia</div>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                   <span style={{ fontSize:12, color:C.primary }}>{usd(quickSpends.reduce((a,s)=>a+s.amount,0))}</span>
-                  <button style={S.btn()} onClick={() => setShowQuick(!showQuick)}>+ Gasto</button>
+                  <button style={S.btn()} onClick={()=>setShowQuick(!showQuick)}>+ Gasto</button>
                 </div>
               </div>
-
               {showQuick && (
                 <div style={{ ...S.card, marginBottom:12, borderColor:C.primary }}>
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
@@ -588,25 +567,17 @@ function App() {
                     </select>
                     <input placeholder="Notas" value={newQuick.notes} onChange={e=>setNewQuick(p=>({...p,notes:e.target.value}))} style={S.inp} />
                   </div>
-                  <button onClick={addQuickSpend} style={{...S.btn(), width:"100%", padding:"10px", fontSize:13}}>Registrar</button>
+                  <button onClick={addQuickSpend} style={{...S.btn(),width:"100%",padding:"10px",fontSize:13}}>Registrar</button>
                 </div>
               )}
-
-              {quickSpends.length === 0 && !showQuick && (
-                <div style={{ fontSize:11, color:C.textDim, padding:"12px 0", textAlign:"center" }}>
-                  Registra compras del dia
-                </div>
+              {quickSpends.length===0&&!showQuick&&(
+                <div style={{ fontSize:11, color:C.textDim, padding:"12px 0", textAlign:"center" }}>Registra compras del dia</div>
               )}
-
-              {quickSpends.length > 0 && (
+              {quickSpends.length>0&&(
                 <div>
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:6, marginBottom:10 }}>
-                    {[
-                      { label:"Debito",  key:"debit",  color:C.primary },
-                      { label:"Credito", key:"credit", color:C.negative },
-                      { label:"Efectivo",key:"cash",   color:C.positive },
-                    ].map(m => {
-                      const total = quickSpends.filter(s=>s.method===m.key).reduce((a,s)=>a+s.amount,0);
+                    {[{label:"Debito",key:"debit",color:C.primary},{label:"Credito",key:"credit",color:C.negative},{label:"Efectivo",key:"cash",color:C.positive}].map(m=>{
+                      const total=quickSpends.filter(s=>s.method===m.key).reduce((a,s)=>a+s.amount,0);
                       return (
                         <div key={m.key} style={{ background:C.bgDeep, borderRadius:8, padding:"8px 6px", textAlign:"center" }}>
                           <div style={{ fontSize:8, color:C.textDim, letterSpacing:1, textTransform:"uppercase" }}>{m.label}</div>
@@ -615,24 +586,22 @@ function App() {
                       );
                     })}
                   </div>
-
-                  {quickSpends.map(s => {
-                    const methodLabel = s.method==="debit" ? "Debito" : s.method==="credit" ? "Credito" : "Efectivo";
-                    const methodColor = s.method==="debit" ? C.primary : s.method==="credit" ? C.negative : C.positive;
+                  {quickSpends.map(s=>{
+                    const mc=s.method==="debit"?C.primary:s.method==="credit"?C.negative:C.positive;
+                    const ml=s.method==="debit"?"Debito":s.method==="credit"?"Credito":"Efectivo";
                     return (
-                      <div key={s.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", borderBottom:`1px solid ${C.border}` }}>
+                      <div key={s.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:`1px solid ${C.border}` }}>
                         <div>
                           <div style={{ fontSize:13 }}>{s.name}</div>
-                          <div style={{ fontSize:10, color:C.textDim }}>{s.date} - {methodLabel}{s.notes ? ` - ${s.notes}` : ""}</div>
+                          <div style={{ fontSize:10, color:C.textDim }}>{s.date} · {ml}{s.notes?` · ${s.notes}`:""}</div>
                         </div>
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                          <div style={{ fontSize:14, fontWeight:"bold", color:methodColor }}>{usd(s.amount)}</div>
-                          <button onClick={() => delQuickSpend(s.id)} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", fontSize:18 }}>x</button>
+                          <div style={{ fontSize:14, fontWeight:"bold", color:mc }}>{usd(s.amount)}</div>
+                          <button onClick={()=>delQuickSpend(s.id)} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", fontSize:18 }}>x</button>
                         </div>
                       </div>
                     );
                   })}
-
                   <div style={{ display:"flex", justifyContent:"space-between", paddingTop:10, fontSize:13, fontWeight:"bold" }}>
                     <span style={{ color:C.textMid }}>Total gastado</span>
                     <span style={{ color:C.primary }}>{usd(quickSpends.reduce((a,s)=>a+s.amount,0))}</span>
@@ -643,12 +612,12 @@ function App() {
           </div>
         )}
 
-        {/* ══ INGRESOS ══ */}
+        {/* INGRESOS */}
         {tab==="ingresos" && (
           <div style={{ marginTop:18 }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
               <div style={S.lbl}>Ingresos del mes</div>
-              <button style={S.btn()} onClick={() => setShowAddInc(!showAddInc)}>+ Agregar</button>
+              <button style={S.btn()} onClick={()=>setShowAddInc(!showAddInc)}>+ Agregar</button>
             </div>
             {showAddInc && (
               <div style={{ ...S.card, marginBottom:14 }}>
@@ -656,19 +625,18 @@ function App() {
                   <input placeholder="Fuente" value={newInc.name} onChange={e=>setNewInc(p=>({...p,name:e.target.value}))} style={S.inp} />
                   <input placeholder="Monto $" type="number" value={newInc.amount} onChange={e=>setNewInc(p=>({...p,amount:e.target.value}))} style={S.inp} />
                 </div>
-                <input placeholder="Fecha (ej. 15 abr)" value={newInc.date} onChange={e=>setNewInc(p=>({...p,date:e.target.value}))} style={{...S.inp,marginBottom:8}} />
+                <input placeholder="Fecha (ej. 15 ago)" value={newInc.date} onChange={e=>setNewInc(p=>({...p,date:e.target.value}))} style={{...S.inp,marginBottom:8}} />
                 <input placeholder="Notas" value={newInc.notes} onChange={e=>setNewInc(p=>({...p,notes:e.target.value}))} style={{...S.inp,marginBottom:10}} />
                 <button onClick={addInc} style={{...S.btn(),width:"100%",padding:"10px",fontSize:14}}>Guardar</button>
               </div>
             )}
-            {income.length===0 && !showAddInc && (
+            {income.length===0&&!showAddInc&&(
               <div style={{ textAlign:"center", padding:"50px 0", color:C.textDim }}>
                 <div style={{ fontSize:36, marginBottom:12 }}>💸</div>
                 <div style={{ fontSize:14 }}>Sin ingresos registrados</div>
-                <div style={{ fontSize:11, marginTop:6, color:C.textDim }}>Cuando llegue algo, agrégalo aquí</div>
               </div>
             )}
-            {income.map(i => (
+            {income.map(i=>(
               <div key={i.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"13px 0", ...S.row }}>
                 <div>
                   <div style={{ fontSize:14, color:C.positive, fontWeight:"bold" }}>{i.name}</div>
@@ -679,11 +647,11 @@ function App() {
                     <div style={{ fontSize:15, fontWeight:"bold", color:C.positive }}>+{usd(i.amount)}</div>
                     <div style={{ fontSize:9, color:C.textDim }}>{cop(i.amount)}</div>
                   </div>
-                  <button onClick={() => delInc(i.id)} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", fontSize:18 }}>×</button>
+                  <button onClick={()=>delInc(i.id)} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", fontSize:18 }}>x</button>
                 </div>
               </div>
             ))}
-            {income.length>0 && (
+            {income.length>0&&(
               <div style={{ ...S.card, marginTop:16 }}>
                 <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
                   <span style={{ fontSize:13, color:C.textMid }}>Total ingresos</span>
@@ -700,19 +668,19 @@ function App() {
           </div>
         )}
 
-        {/* ══ DEUDAS ══ */}
+        {/* DEUDAS */}
         {tab==="deudas" && (
           <div style={{ marginTop:18 }}>
 
-            {/* Préstamos header + botón */}
+            {/* Prestamos */}
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-              <div style={S.lbl}>Préstamos personales</div>
-              <button style={S.gbtn} onClick={() => { setShowAddLoan(!showAddLoan); setShowAddCard(false); }}>+ Préstamo</button>
+              <div style={S.lbl}>Prestamos personales</div>
+              <button style={S.gbtn} onClick={()=>{setShowAddLoan(!showAddLoan);setShowAddCard(false);}}>+ Prestamo</button>
             </div>
 
             {showAddLoan && (
               <div style={{ ...S.card, marginBottom:16, borderColor:C.primary }}>
-                <div style={{ fontSize:9, color:C.primary, letterSpacing:3, textTransform:"uppercase", marginBottom:10 }}>Nuevo préstamo</div>
+                <div style={{ fontSize:9, color:C.primary, letterSpacing:3, textTransform:"uppercase", marginBottom:10 }}>Nuevo prestamo</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
                   <input placeholder="Nombre (ej. SoFi)" value={newLoan.name} onChange={e=>setNewLoan(p=>({...p,name:e.target.value}))} style={S.inp} />
                   <input placeholder="Balance actual $" type="number" value={newLoan.balance} onChange={e=>setNewLoan(p=>({...p,balance:e.target.value}))} style={S.inp} />
@@ -723,10 +691,10 @@ function App() {
                 </div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
                   <input placeholder="APR %" type="number" value={newLoan.apr} onChange={e=>setNewLoan(p=>({...p,apr:e.target.value}))} style={S.inp} />
-                  <input placeholder="Día de pago" type="number" value={newLoan.dueDay} onChange={e=>setNewLoan(p=>({...p,dueDay:e.target.value}))} style={S.inp} />
+                  <input placeholder="Dia de pago" type="number" value={newLoan.dueDay} onChange={e=>setNewLoan(p=>({...p,dueDay:e.target.value}))} style={S.inp} />
                 </div>
-                <input placeholder="Notas" value={newLoan.notes} onChange={e=>setNewLoan(p=>({...p,notes:e.target.value}))} style={{...S.inp, marginBottom:10}} />
-                <button onClick={addLoan} style={{...S.btn(), width:"100%", padding:"10px", fontSize:13}}>Guardar préstamo</button>
+                <input placeholder="Notas" value={newLoan.notes} onChange={e=>setNewLoan(p=>({...p,notes:e.target.value}))} style={{...S.inp,marginBottom:10}} />
+                <button onClick={addLoan} style={{...S.btn(),width:"100%",padding:"10px",fontSize:13}}>Guardar prestamo</button>
               </div>
             )}
 
@@ -737,19 +705,24 @@ function App() {
                 <div key={l.id} style={{ ...S.card, marginBottom:14, borderTop:`3px solid ${l.color}` }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
                     <span style={{ fontSize:15, fontWeight:"bold" }}>{l.name}</span>
-                    <span style={{ fontSize:13, color:C.primary, fontWeight:"bold" }}>{usd(l.balance)}</span>
+                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                      <span style={{ fontSize:13, color:C.primary, fontWeight:"bold" }}>{usd(l.balance)}</span>
+                      <button onClick={()=>delLoan(l.id)} style={S.rbtn}>Eliminar</button>
+                    </div>
                   </div>
                   <div style={{ fontSize:9, color:C.textDim, marginBottom:5 }}>Pagado {prog}% — {usd(l.original-l.balance)} de {usd(l.original)}</div>
                   <div style={{ height:7, background:C.border, borderRadius:4, overflow:"hidden", marginBottom:12 }}>
-                    <div style={{ height:"100%", width:`${prog}%`, background:l.color, borderRadius:4, opacity:.85 }} />
+                    <div style={{ height:"100%", width:`${Math.max(0,Math.min(100,prog))}%`, background:l.color, borderRadius:4, opacity:.85 }} />
                   </div>
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
                     {[
-                      { label:"Mi cuota/mes", field:"payment", val:l.payment },
-                      { label:"APR", field:"apr", val:l.apr, suffix:"%" },
-                      { label:"Día de pago", field:"dueDay", val:l.dueDay },
-                      { label:"~Meses rest.", readOnly:true, val:monthsLeft },
-                    ].map((f,i) => (
+                      {label:"Balance actual", field:"balance", val:l.balance},
+                      {label:"Mi cuota/mes",   field:"payment", val:l.payment},
+                      {label:"APR",            field:"apr",     val:l.apr, suffix:"%"},
+                      {label:"Dia de pago",    field:"dueDay",  val:l.dueDay},
+                      {label:"Original",       field:"original",val:l.original},
+                      {label:"~Meses rest.",   readOnly:true,   val:monthsLeft},
+                    ].map((f,i)=>(
                       <div key={i} style={{ background:C.bgDeep, borderRadius:8, padding:"8px 10px" }}>
                         <div style={{ fontSize:8, color:C.textDim, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>{f.label}</div>
                         <div style={{ fontSize:14, color:C.primary }}>
@@ -760,34 +733,35 @@ function App() {
                       </div>
                     ))}
                   </div>
-                  {l.notes && <div style={{ marginTop:10, fontSize:10, color:C.textDim, background:C.bgDeep, borderRadius:8, padding:"7px 10px" }}>{l.notes}</div>}
+                  {l.notes&&<div style={{ marginTop:10, fontSize:10, color:C.textDim, background:C.bgDeep, borderRadius:8, padding:"7px 10px" }}>{l.notes}</div>}
                 </div>
               );
             })}
 
-            {/* Tarjetas header + botón */}
+            {/* Tarjetas */}
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:10, marginBottom:10 }}>
-              <div style={S.lbl}>Tarjetas de crédito</div>
-              <button style={S.gbtn} onClick={() => { setShowAddCard(!showAddCard); setShowAddLoan(false); }}>+ Tarjeta</button>
+              <div style={S.lbl}>Tarjetas de credito</div>
+              <button style={S.gbtn} onClick={()=>{setShowAddCard(!showAddCard);setShowAddLoan(false);}}>+ Tarjeta</button>
             </div>
 
             {showAddCard && (
               <div style={{ ...S.card, marginBottom:16, borderColor:C.primary }}>
                 <div style={{ fontSize:9, color:C.primary, letterSpacing:3, textTransform:"uppercase", marginBottom:10 }}>Nueva tarjeta</div>
+                <div style={{ fontSize:10, color:C.textDim, marginBottom:10 }}>Se creara automaticamente el gasto en Gastos → Tarjetas</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
                   <input placeholder="Nombre (ej. Chase)" value={newCard.name} onChange={e=>setNewCard(p=>({...p,name:e.target.value}))} style={S.inp} />
-                  <input placeholder="Límite $" type="number" value={newCard.limit} onChange={e=>setNewCard(p=>({...p,limit:e.target.value}))} style={S.inp} />
+                  <input placeholder="Limite $" type="number" value={newCard.limit} onChange={e=>setNewCard(p=>({...p,limit:e.target.value}))} style={S.inp} />
                 </div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
                   <input placeholder="Balance actual $" type="number" value={newCard.balance} onChange={e=>setNewCard(p=>({...p,balance:e.target.value}))} style={S.inp} />
-                  <input placeholder="Pago mínimo $" type="number" value={newCard.minPay} onChange={e=>setNewCard(p=>({...p,minPay:e.target.value}))} style={S.inp} />
+                  <input placeholder="Pago minimo $" type="number" value={newCard.minPay} onChange={e=>setNewCard(p=>({...p,minPay:e.target.value}))} style={S.inp} />
                 </div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
-                  <input placeholder="Día de pago" type="number" value={newCard.dueDay} onChange={e=>setNewCard(p=>({...p,dueDay:e.target.value}))} style={S.inp} />
-                  <input placeholder="Día de corte" type="number" value={newCard.cutDay} onChange={e=>setNewCard(p=>({...p,cutDay:e.target.value}))} style={S.inp} />
+                  <input placeholder="Dia de pago" type="number" value={newCard.dueDay} onChange={e=>setNewCard(p=>({...p,dueDay:e.target.value}))} style={S.inp} />
+                  <input placeholder="Dia de corte" type="number" value={newCard.cutDay} onChange={e=>setNewCard(p=>({...p,cutDay:e.target.value}))} style={S.inp} />
                 </div>
-                <input placeholder="Notas" value={newCard.notes} onChange={e=>setNewCard(p=>({...p,notes:e.target.value}))} style={{...S.inp, marginBottom:10}} />
-                <button onClick={addCard} style={{...S.btn(), width:"100%", padding:"10px", fontSize:13}}>Guardar tarjeta</button>
+                <input placeholder="Notas" value={newCard.notes} onChange={e=>setNewCard(p=>({...p,notes:e.target.value}))} style={{...S.inp,marginBottom:10}} />
+                <button onClick={addCard} style={{...S.btn(),width:"100%",padding:"10px",fontSize:13}}>Guardar tarjeta</button>
               </div>
             )}
 
@@ -795,7 +769,7 @@ function App() {
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:C.textMid, marginBottom:6 }}>
                 <span>{usd(cardDebt)} usado</span>
                 <span style={{ color:usageColor(overUsage), fontWeight:"bold" }}>{overUsage}% total</span>
-                <span>{usd(totalLimit)} límite</span>
+                <span>{usd(totalLimit)} limite</span>
               </div>
               <div style={{ height:7, background:C.border, borderRadius:4, overflow:"hidden" }}>
                 <div style={{ height:"100%", width:`${overUsage}%`, background:usageColor(overUsage), borderRadius:4 }} />
@@ -804,27 +778,30 @@ function App() {
                 Meta 30% → {usd(totalLimit*.3)} · falta pagar {usd(Math.max(0,cardDebt-totalLimit*.3))}
               </div>
             </div>
+
             {cards.map(c => {
-              const p = usagePct(c.balance, c.limit);
-              const toGoal = Math.max(0, c.balance - c.limit*.3);
+              const p=usagePct(c.balance,c.limit), toGoal=Math.max(0,c.balance-c.limit*.3);
               return (
                 <div key={c.id} style={{ ...S.card, marginBottom:12, borderTop:`3px solid ${c.color}` }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
                     <span style={{ fontSize:14, fontWeight:"bold" }}>{c.name}</span>
-                    <span style={{ fontSize:10, background:usageColor(p)+"22", color:usageColor(p), borderRadius:20, padding:"3px 10px", fontWeight:"bold" }}>{p}%</span>
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <span style={{ fontSize:10, background:usageColor(p)+"22", color:usageColor(p), borderRadius:20, padding:"3px 10px", fontWeight:"bold" }}>{p}%</span>
+                      <button onClick={()=>delCard(c.id)} style={S.rbtn}>Eliminar</button>
+                    </div>
                   </div>
                   <div style={{ height:6, background:C.border, borderRadius:3, overflow:"hidden", marginBottom:10 }}>
                     <div style={{ height:"100%", width:`${p}%`, background:usageColor(p), borderRadius:3 }} />
                   </div>
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
                     {[
-                      { label:"Balance",   field:"balance", val:c.balance },
-                      { label:"Límite",    field:"limit",   val:c.limit },
-                      { label:"Pago mín.", field:"minPay",  val:c.minPay },
-                      { label:"Día pago",  field:"dueDay",  val:c.dueDay },
-                      { label:"Statement", field:"statBal", val:c.statBal },
-                      { label:"Día corte", field:"cutDay",  val:c.cutDay },
-                    ].map(f => (
+                      {label:"Balance",   field:"balance", val:c.balance},
+                      {label:"Limite",    field:"limit",   val:c.limit},
+                      {label:"Pago min.", field:"minPay",  val:c.minPay},
+                      {label:"Dia pago",  field:"dueDay",  val:c.dueDay},
+                      {label:"Statement", field:"statBal", val:c.statBal},
+                      {label:"Dia corte", field:"cutDay",  val:c.cutDay},
+                    ].map(f=>(
                       <div key={f.field} style={{ background:C.bgDeep, borderRadius:8, padding:"8px 10px" }}>
                         <div style={{ fontSize:8, color:C.textDim, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>{f.label}</div>
                         <div style={{ fontSize:13, color:C.primary }}>$<Editable value={f.val} onSave={v=>updCard(c.id,f.field,v)}/></div>
@@ -834,7 +811,7 @@ function App() {
                   <div style={{ marginTop:10, background:toGoal>0?"#1a0808":"#081510", borderRadius:8, padding:"8px 10px", display:"flex", justifyContent:"space-between" }}>
                     <span style={{ fontSize:10, color:C.textMid }}>Para llegar al 30%</span>
                     <span style={{ fontSize:12, fontWeight:"bold", color:toGoal>0?C.negative:C.positive }}>
-                      {toGoal>0 ? `pagar ${usd(toGoal)}` : "✓ En meta"}
+                      {toGoal>0?`pagar ${usd(toGoal)}`:"En meta"}
                     </span>
                   </div>
                 </div>
@@ -843,7 +820,7 @@ function App() {
           </div>
         )}
 
-        {/* ══ RESUMEN ══ */}
+        {/* RESUMEN */}
         {tab==="resumen" && (
           <div style={{ marginTop:18 }}>
             <div style={{ ...S.card, marginBottom:14, textAlign:"center", padding:"22px 14px" }}>
@@ -854,7 +831,7 @@ function App() {
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:14 }}>
               <div style={S.card}>
                 <div style={{ fontSize:9, color:C.positive, letterSpacing:2, textTransform:"uppercase", marginBottom:8 }}>Activos</div>
-                {[{l:"Checking",v:checking,s:setChecking},{l:"Savings",v:savings,s:setSavings}].map((a,i) => (
+                {[{l:"Checking",v:checking,s:setChecking},{l:"Savings",v:savings,s:setSavings}].map((a,i)=>(
                   <div key={i} style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:5 }}>
                     <span style={{ color:C.textMid }}>{a.l}</span>
                     <span style={{ color:C.positive }}>$<Editable value={a.v} onSave={a.s} color={C.positive}/></span>
@@ -867,7 +844,7 @@ function App() {
               </div>
               <div style={S.card}>
                 <div style={{ fontSize:9, color:C.negative, letterSpacing:2, textTransform:"uppercase", marginBottom:8 }}>Deudas</div>
-                {[{l:"Tarjetas",v:cardDebt},{l:"Préstamos",v:loanDebt}].map((d,i) => (
+                {[{l:"Tarjetas",v:cardDebt},{l:"Prestamos",v:loanDebt}].map((d,i)=>(
                   <div key={i} style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:5 }}>
                     <span style={{ color:C.textMid }}>{d.l}</span>
                     <span style={{ color:C.negative }}>{usd(d.v)}</span>
@@ -881,8 +858,8 @@ function App() {
             </div>
             <div style={{ ...S.card, marginBottom:14 }}>
               <div style={{ ...S.lbl, marginBottom:12 }}>Gastos este mes</div>
-              {CATS.map((cat,i) => {
-                const v = expenses.filter(e=>e.cat===cat).reduce((a,e)=>a+e.amount,0);
+              {CATS.map((cat,i)=>{
+                const v=expenses.filter(e=>e.cat===cat).reduce((a,e)=>a+e.amount,0);
                 if (!v) return null;
                 return (
                   <div key={i} style={{ display:"flex", justifyContent:"space-between", fontSize:13, padding:"8px 0", borderBottom:`1px solid ${C.border}` }}>
@@ -909,22 +886,19 @@ function App() {
           </div>
         )}
 
-
-        {/* ══ GRÁFICAS ══ */}
+        {/* GRAFICAS */}
         {tab==="graficas" && (
           <div style={{ marginTop:18 }}>
-
-            {/* Dona distribución de gastos */}
             <div style={{ ...S.card, marginBottom:14 }}>
-              <div style={{ ...S.lbl, marginBottom:14 }}>Distribución de gastos</div>
-              {(() => {
-                const cats = [
-                  { label:"Fijos",         color:C.primary,  value: expenses.filter(e=>e.cat==="fijo").reduce((a,e)=>a+e.amount,0) },
-                  { label:"Tarjetas",      color:"#4361ee",   value: expenses.filter(e=>e.cat==="tarjeta").reduce((a,e)=>a+e.amount,0) },
-                  { label:"Suscripciones", color:"#7c6ed4",   value: expenses.filter(e=>e.cat==="suscripcion").reduce((a,e)=>a+e.amount,0) },
-                  { label:"Variables",     color:C.positive,  value: expenses.filter(e=>e.cat==="variable").reduce((a,e)=>a+e.amount,0) },
+              <div style={{ ...S.lbl, marginBottom:14 }}>Distribucion de gastos</div>
+              {(()=>{
+                const cats=[
+                  {label:"Fijos",        color:C.primary, value:expenses.filter(e=>e.cat==="fijo").reduce((a,e)=>a+e.amount,0)},
+                  {label:"Tarjetas",     color:"#4361ee",  value:expenses.filter(e=>e.cat==="tarjeta").reduce((a,e)=>a+e.amount,0)},
+                  {label:"Suscripciones",color:"#7c6ed4",  value:expenses.filter(e=>e.cat==="suscripcion").reduce((a,e)=>a+e.amount,0)},
+                  {label:"Variables",    color:C.positive, value:expenses.filter(e=>e.cat==="variable").reduce((a,e)=>a+e.amount,0)},
                 ].filter(c=>c.value>0);
-                const total = cats.reduce((a,c)=>a+c.value,0);
+                const total=cats.reduce((a,c)=>a+c.value,0);
                 return (
                   <div style={{ display:"flex", alignItems:"center", gap:20 }}>
                     <div style={{ position:"relative", flexShrink:0 }}>
@@ -935,7 +909,7 @@ function App() {
                       </div>
                     </div>
                     <div style={{ flex:1 }}>
-                      {cats.map((c,i) => (
+                      {cats.map((c,i)=>(
                         <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
                           <div style={{ display:"flex", alignItems:"center", gap:7 }}>
                             <div style={{ width:8, height:8, borderRadius:"50%", background:c.color, flexShrink:0 }} />
@@ -952,8 +926,6 @@ function App() {
                 );
               })()}
             </div>
-
-            {/* Ingresos vs Gastos pagados este mes */}
             <div style={{ ...S.card, marginBottom:14 }}>
               <div style={{ ...S.lbl, marginBottom:4 }}>Ingresos vs Gastos pagados</div>
               <div style={{ display:"flex", gap:16, marginBottom:12 }}>
@@ -966,35 +938,30 @@ function App() {
                   <span style={{ fontSize:10, color:C.textMid }}>Pagado</span>
                 </div>
               </div>
-              {(() => {
-                const histBars = [...history].reverse().slice(-5).map(h=>({ label:h.label.split(" ")[0].slice(0,3), a:h.totalIncome, b:h.totalPaid }));
-                const currentBar = { label:currentMonth.split(" ")[0].slice(0,3)+"*", a:totalIncome, b:totalPaid };
-                const bars = [...histBars, currentBar];
-                return <BarChart bars={bars} />;
+              {(()=>{
+                const histBars=[...history].reverse().slice(-5).map(h=>({label:h.label.split(" ")[0].slice(0,3),a:h.totalIncome,b:h.totalPaid}));
+                const currentBar={label:currentMonth.split(" ")[0].slice(0,3)+"*",a:totalIncome,b:totalPaid};
+                return <BarChart bars={[...histBars,currentBar]} />;
               })()}
               <div style={{ fontSize:9, color:C.textDim, marginTop:6, textAlign:"right" }}>* mes actual</div>
             </div>
-
-            {/* Evolución patrimonio */}
             <div style={{ ...S.card, marginBottom:14 }}>
-              <div style={{ ...S.lbl, marginBottom:12 }}>Evolución del patrimonio</div>
-              {(() => {
-                const pts = [...history].reverse().map(h=>({ v:h.netWorth, label:h.label.split(" ")[0].slice(0,3) }));
-                pts.push({ v:netWorth, label:"Hoy" });
+              <div style={{ ...S.lbl, marginBottom:12 }}>Evolucion del patrimonio</div>
+              {(()=>{
+                const pts=[...history].reverse().map(h=>({v:h.netWorth,label:h.label.split(" ")[0].slice(0,3)}));
+                pts.push({v:netWorth,label:"Hoy"});
                 return <LineChart points={pts} color="#4361ee" />;
               })()}
             </div>
-
-            {/* Deuda total vs activos */}
             <div style={{ ...S.card, marginBottom:14 }}>
               <div style={{ ...S.lbl, marginBottom:14 }}>Deuda vs Activos</div>
-              {(() => {
-                const data = [
-                  { label:"Activos", color:C.positive, value: checking+savings },
-                  { label:"Tarjetas", color:"#4361ee", value: cardDebt },
-                  { label:"Préstamos", color:"#8b5cf6", value: loanDebt },
+              {(()=>{
+                const data=[
+                  {label:"Activos",   color:C.positive, value:checking+savings},
+                  {label:"Tarjetas",  color:"#4361ee",  value:cardDebt},
+                  {label:"Prestamos", color:"#8b5cf6",  value:loanDebt},
                 ];
-                const total = data.reduce((a,c)=>a+c.value,0);
+                const total=data.reduce((a,c)=>a+c.value,0);
                 return (
                   <div style={{ display:"flex", alignItems:"center", gap:20 }}>
                     <div style={{ position:"relative", flexShrink:0 }}>
@@ -1005,7 +972,7 @@ function App() {
                       </div>
                     </div>
                     <div style={{ flex:1 }}>
-                      {data.map((c,i) => (
+                      {data.map((c,i)=>(
                         <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
                           <div style={{ display:"flex", alignItems:"center", gap:7 }}>
                             <div style={{ width:8, height:8, borderRadius:"50%", background:c.color, flexShrink:0 }} />
@@ -1023,25 +990,175 @@ function App() {
               })()}
             </div>
 
+            {/* Evolucion de tarjetas */}
+            {(()=>{
+              const MAX_BAL = 5000;
+              const toggleCard = id => {
+                setActiveCards(prev => {
+                  const all = cards.map(c=>c.id);
+                  const current = prev || all;
+                  if (current.includes(id)) {
+                    const next = current.filter(x=>x!==id);
+                    return next.length===0 ? all : next;
+                  } else {
+                    return [...current, id];
+                  }
+                });
+              };
+              const toggleAll = () => setActiveCards(null);
+              const allActive = activeCards===null || activeCards.length===cards.length;
+              const visibleIds = activeCards || cards.map(c=>c.id);
+              const visibleCards = cards.filter(c=>visibleIds.includes(c.id));
+
+              const pts = [...history].reverse();
+              const labels = [
+                ...pts.map(h=>h.label.split(" ")[0].slice(0,3)),
+                currentMonth.split(" ")[0].slice(0,3)+"*"
+              ];
+              const nPts = labels.length;
+              const W=300, H=130, padL=28, padR=8, padT=10, padB=16;
+              const px = i => padL + (nPts===1 ? (W-padL-padR)/2 : (i/(nPts-1))*(W-padL-padR));
+              const py = v => padT + (1-(v/MAX_BAL))*(H-padT-padB);
+
+              const gridVals = [0,1000,2000,3000,4000,5000];
+
+              return (
+                <div style={{ ...S.card, marginBottom:14 }}>
+                  <div style={{ ...S.lbl, marginBottom:12 }}>Evolucion de tarjetas</div>
+
+                  {/* Botones toggle */}
+                  <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
+                    <button onClick={toggleAll}
+                      style={{ fontSize:10, padding:"5px 12px", borderRadius:20, border:`1px solid ${allActive?C.primary:C.borderMid}`, background:allActive?C.primary+"33":C.bgDeep, color:allActive?C.primary:C.textMid, cursor:"pointer", fontFamily:FONT, fontWeight:"bold" }}>
+                      Todas
+                    </button>
+                    {cards.map(c=>{
+                      const on = visibleIds.includes(c.id);
+                      return (
+                        <button key={c.id} onClick={()=>toggleCard(c.id)}
+                          style={{ fontSize:10, padding:"5px 12px", borderRadius:20, border:`1.5px solid ${on?c.color:C.borderMid}`, background:on?c.color+"33":C.bgDeep, color:on?c.color:C.textMid, cursor:"pointer", fontFamily:FONT, fontWeight:on?"bold":"normal", opacity:on?1:0.5 }}>
+                          {c.name.split(" ")[0]}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {history.length < 1 ? (
+                    <div style={{ textAlign:"center", padding:"20px 0", color:C.textDim, fontSize:11 }}>
+                      Necesitas al menos 1 mes cerrado para ver la evolucion
+                    </div>
+                  ) : (
+                    <div>
+                      <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:150, overflow:"visible" }}>
+                        {/* Grid horizontal */}
+                        {gridVals.map((v,i)=>{
+                          const y=py(v);
+                          return (
+                            <g key={i}>
+                              <line x1={padL} y1={y} x2={W-padR} y2={y} stroke={C.border} strokeWidth={v===0?"1":"0.5"} strokeDasharray={v===0?"none":"3,3"} />
+                              <text x={padL-2} y={y+2} textAnchor="end" fontSize="5.5" fill={C.textDim}>${v===0?"0":v/1000+"k"}</text>
+                            </g>
+                          );
+                        })}
+                        {/* X labels */}
+                        {labels.map((l,i)=>(
+                          <text key={i} x={px(i)} y={H} textAnchor="middle" fontSize="6" fill={C.textDim}>{l}</text>
+                        ))}
+                        {/* Lineas por tarjeta */}
+                        {visibleCards.map(card=>{
+                          const cardPts = pts.map((h,i)=>{
+                            const hc = h.cards ? h.cards.find(c=>c.id===card.id) : null;
+                            return hc ? {x:px(i), y:py(Math.min(hc.balance,MAX_BAL)), v:hc.balance} : null;
+                          }).filter(Boolean);
+                          cardPts.push({x:px(labels.length-1), y:py(Math.min(card.balance,MAX_BAL)), v:card.balance});
+                          if (cardPts.length < 2) return null;
+                          const dLine = cardPts.map((p,i)=>`${i===0?"M":"L"}${p.x},${p.y}`).join(" ");
+                          return (
+                            <g key={card.id}>
+                              <path d={dLine} fill="none" stroke={card.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              {cardPts.map((p,i)=>(
+                                <circle key={i} cx={p.x} cy={p.y} r={3} fill={card.color} stroke={C.bgCard} strokeWidth="1"/>
+                              ))}
+                            </g>
+                          );
+                        })}
+                      </svg>
+
+                      {/* Leyenda */}
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginTop:10 }}>
+                        {visibleCards.map(card=>{
+                          const prev = history[0]?.cards?.find(c=>c.id===card.id);
+                          const diff = prev ? card.balance - prev.balance : null;
+                          return (
+                            <div key={card.id} style={{ background:C.bgDeep, borderRadius:8, padding:"8px 10px", borderLeft:`3px solid ${card.color}` }}>
+                              <div style={{ fontSize:10, color:C.textMid, marginBottom:2 }}>{card.name.split(" ")[0]}</div>
+                              <div style={{ fontSize:14, fontWeight:"bold", color:card.color }}>{usd(card.balance)}</div>
+                              {diff!==null&&(
+                                <div style={{ fontSize:9, color:diff<=0?C.positive:C.negative, marginTop:2 }}>
+                                  {diff<=0?"-":"+"}${Math.abs(Math.round(diff))} vs mes ant.
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div style={{ fontSize:9, color:C.textDim, marginTop:8, textAlign:"right" }}>* mes actual · tope $5,000</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
 
-        {/* ══ HISTORIAL ══ */}
+        {/* HISTORIAL */}
         {tab==="historial" && (
           <div style={{ marginTop:18 }}>
+
+            {/* Notas de la app */}
+            <div style={{ ...S.card, marginBottom:16, borderColor:"#2a2a1a" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:showNotes?10:0 }}>
+                <div style={{ ...S.lbl, marginBottom:0 }}>Notas y mejoras pendientes</div>
+                <button style={S.gbtn} onClick={()=>setShowNotes(!showNotes)}>{showNotes?"Cerrar":"Ver / Agregar"}</button>
+              </div>
+              {showNotes && (
+                <div>
+                  <div style={{ display:"flex", gap:8, marginTop:10, marginBottom:10 }}>
+                    <input placeholder="Escribe una nota o idea..." value={newNote} onChange={e=>setNewNote(e.target.value)}
+                      onKeyDown={e=>{ if(e.key==="Enter") addAppNote(); }}
+                      style={{...S.inp, flex:1}} />
+                    <button onClick={addAppNote} style={S.btn()}>+</button>
+                  </div>
+                  {appNotes.length===0&&(
+                    <div style={{ fontSize:11, color:C.textDim, textAlign:"center", padding:"10px 0" }}>Sin notas aun</div>
+                  )}
+                  {appNotes.map(n=>(
+                    <div key={n.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", padding:"8px 0", borderBottom:`1px solid ${C.border}` }}>
+                      <div>
+                        <div style={{ fontSize:13 }}>{n.text}</div>
+                        <div style={{ fontSize:9, color:C.textDim, marginTop:2 }}>{n.date}</div>
+                      </div>
+                      <button onClick={()=>delAppNote(n.id)} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", fontSize:18, flexShrink:0 }}>x</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:8 }}>
               <div style={S.lbl}>Historial mensual</div>
               <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                <button onClick={() => setShowImport(true)} style={S.sbtn}>↑ Importar</button>
-                <button onClick={exportData} style={S.gbtn}>↓ Exportar</button>
-                <button onClick={() => setShowPlanner(!showPlanner)} style={S.gbtn}>📋 Planear</button>
-                <button onClick={() => setConfirmClose(true)} style={S.gbtn}>Cerrar mes →</button>
+                <button onClick={()=>setShowImport(true)} style={S.sbtn}>Importar</button>
+                <button onClick={exportData} style={S.gbtn}>Exportar</button>
+                <button onClick={()=>setShowPlanner(!showPlanner)} style={S.gbtn}>Planear</button>
+                <button onClick={()=>setConfirmClose(true)} style={S.gbtn}>Cerrar mes</button>
               </div>
             </div>
+
             {showPlanner && (
               <div style={{ ...S.card, marginBottom:16, borderColor:"#2a3a1a" }}>
-                <div style={{ fontSize:9, color:C.positive, letterSpacing:3, textTransform:"uppercase", marginBottom:10 }}>Planear próximo mes</div>
-                <div style={{ fontSize:11, color:C.textDim, marginBottom:12 }}>Agrega gastos nuevos que entrarán cuando cierres el mes</div>
+                <div style={{ fontSize:9, color:C.positive, letterSpacing:3, textTransform:"uppercase", marginBottom:10 }}>Planear proximo mes</div>
+                <div style={{ fontSize:11, color:C.textDim, marginBottom:12 }}>Gastos nuevos que entraran al cerrar el mes</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginBottom:6 }}>
                   <input placeholder="Nombre" value={newPlanItem.name} onChange={e=>setNewPlanItem(p=>({...p,name:e.target.value}))} style={S.inp} />
                   <input placeholder="Monto $" type="number" value={newPlanItem.amount} onChange={e=>setNewPlanItem(p=>({...p,amount:e.target.value}))} style={S.inp} />
@@ -1049,46 +1166,43 @@ function App() {
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginBottom:6 }}>
                   <select value={newPlanItem.cat} onChange={e=>setNewPlanItem(p=>({...p,cat:e.target.value}))} style={S.inp}>
                     <option value="fijo">Fijo</option>
-                    <option value="suscripcion">Suscripción</option>
+                    <option value="suscripcion">Suscripcion</option>
                     <option value="tarjeta">Tarjeta</option>
                     <option value="variable">Variable</option>
                   </select>
-                  <input placeholder="Día" type="number" value={newPlanItem.dueDay} onChange={e=>setNewPlanItem(p=>({...p,dueDay:parseInt(e.target.value)||1}))} style={S.inp} />
+                  <input placeholder="Dia" type="number" value={newPlanItem.dueDay} onChange={e=>setNewPlanItem(p=>({...p,dueDay:parseInt(e.target.value)||1}))} style={S.inp} />
                 </div>
-                <input placeholder="Notas" value={newPlanItem.notes} onChange={e=>setNewPlanItem(p=>({...p,notes:e.target.value}))} style={{...S.inp, marginBottom:8}} />
-                <button onClick={addPlanItem} style={{...S.btn(), width:"100%", padding:"9px", marginBottom: plannerItems.length>0?12:0}}>+ Agregar al plan</button>
-                {plannerItems.length>0 && (
+                <input placeholder="Notas" value={newPlanItem.notes} onChange={e=>setNewPlanItem(p=>({...p,notes:e.target.value}))} style={{...S.inp,marginBottom:8}} />
+                <button onClick={addPlanItem} style={{...S.btn(),width:"100%",padding:"9px",marginBottom:plannerItems.length>0?12:0}}>+ Agregar al plan</button>
+                {plannerItems.length>0&&(
                   <div>
                     <div style={{ fontSize:9, color:C.textMid, letterSpacing:2, textTransform:"uppercase", marginBottom:6 }}>Cambios planeados</div>
-                    {plannerItems.map((p,i) => (
-                      <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:"1px solid #161410" }}>
+                    {plannerItems.map((p,i)=>(
+                      <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:`1px solid ${C.border}` }}>
                         <div>
                           <div style={{ fontSize:12 }}>{p.name}</div>
-                          <div style={{ fontSize:9, color:C.textDim }}>{p.cat} · día {p.dueDay}</div>
+                          <div style={{ fontSize:9, color:C.textDim }}>{p.cat} · dia {p.dueDay}</div>
                         </div>
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                           <span style={{ fontSize:13, color:C.positive }}>{usd(p.amount)}</span>
-                          <button onClick={()=>delPlanItem(i)} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", fontSize:18 }}>×</button>
+                          <button onClick={()=>delPlanItem(i)} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", fontSize:18 }}>x</button>
                         </div>
                       </div>
                     ))}
-                    <div style={{ fontSize:10, color:C.positive, marginTop:8, textAlign:"center" }}>
-                      ✓ Se aplicarán al cerrar el mes
-                    </div>
+                    <div style={{ fontSize:10, color:C.positive, marginTop:8, textAlign:"center" }}>Se aplicaran al cerrar el mes</div>
                   </div>
                 )}
               </div>
             )}
 
-            {history.length===0 && (
+            {history.length===0&&(
               <div style={{ textAlign:"center", padding:"50px 0", color:C.textDim }}>
                 <div style={{ fontSize:32, marginBottom:12 }}>📅</div>
-                <div style={{ fontSize:14 }}>Sin meses cerrados aún</div>
-                <div style={{ fontSize:11, marginTop:6, color:C.textDim }}>Al cerrar un mes queda guardado aquí para siempre</div>
+                <div style={{ fontSize:14 }}>Sin meses cerrados aun</div>
               </div>
             )}
-            {history.map(h => (
-              <div key={h.id} style={{ ...S.card, marginBottom:12, cursor:"pointer" }} onClick={() => setHistDetail(histDetail?.id===h.id ? null : h)}>
+            {history.map(h=>(
+              <div key={h.id} style={{ ...S.card, marginBottom:12, cursor:"pointer" }} onClick={()=>setHistDetail(histDetail?.id===h.id?null:h)}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                   <div>
                     <div style={{ fontSize:15, fontWeight:"bold" }}>{h.label}</div>
@@ -1101,48 +1215,53 @@ function App() {
                     <div style={{ fontSize:9, color:C.textDim }}>balance</div>
                   </div>
                 </div>
-                {histDetail?.id===h.id && (
+                {histDetail?.id===h.id&&(
                   <div style={{ marginTop:12 }}>
                     <div style={{ height:1, background:C.border, marginBottom:12 }} />
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
                       {[
-                        {l:"Checking",       v:h.checking,  c:C.positive},
-                        {l:"Savings",        v:h.savings,   c:C.positive},
-                        {l:"Deuda tarjetas", v:h.cardDebt,  c:C.negative},
-                        {l:"Deuda préstamos",v:h.loanDebt,  c:C.negative},
-                        {l:"Patrimonio",     v:h.netWorth,  c:h.netWorth>=0?C.positive:C.negative},
-                        {l:"Pagado",         v:h.totalPaid, c:C.primary},
-                      ].map((s,i) => (
+                        {l:"Checking",        v:h.checking,  c:C.positive},
+                        {l:"Savings",         v:h.savings,   c:C.positive},
+                        {l:"Deuda tarjetas",  v:h.cardDebt,  c:C.negative},
+                        {l:"Deuda prestamos", v:h.loanDebt,  c:C.negative},
+                        {l:"Patrimonio",      v:h.netWorth,  c:h.netWorth>=0?C.positive:C.negative},
+                        {l:"Pagado",          v:h.totalPaid, c:C.primary},
+                      ].map((s,i)=>(
                         <div key={i} style={{ background:C.bgDeep, borderRadius:8, padding:"8px 10px" }}>
                           <div style={{ fontSize:8, color:C.textDim, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>{s.l}</div>
                           <div style={{ fontSize:13, fontWeight:"bold", color:s.c }}>{usd(s.v)}</div>
                         </div>
                       ))}
                     </div>
-                    {h.income.length>0 && (
+                    {h.note&&<div style={{ fontSize:11, color:C.textMid, padding:"8px 10px", background:C.bgDeep, borderRadius:8, marginBottom:8 }}>{h.note}</div>}
+                    {h.income&&h.income.length>0&&(
                       <div>
                         <div style={{ fontSize:9, color:C.textMid, letterSpacing:2, textTransform:"uppercase", marginBottom:6 }}>Ingresos</div>
-                        {h.income.map((i,idx) => (
-                          <div key={idx} style={{ display:"flex", justifyContent:"space-between", fontSize:12, padding:"5px 0", borderBottom:"1px solid #161410" }}>
+                        {h.income.map((i,idx)=>(
+                          <div key={idx} style={{ display:"flex", justifyContent:"space-between", fontSize:12, padding:"5px 0", borderBottom:`1px solid ${C.border}` }}>
                             <span style={{ color:C.textMid }}>{i.name}</span>
                             <span style={{ color:C.positive }}>+{usd(i.amount)}</span>
                           </div>
                         ))}
+                        <div style={{ display:"flex", justifyContent:"space-between", fontSize:13, fontWeight:"bold", paddingTop:8 }}>
+                          <span style={{ color:C.textMid }}>Total ingresos</span>
+                          <span style={{ color:C.positive }}>{usd(h.totalIncome)}</span>
+                        </div>
                       </div>
                     )}
                   </div>
                 )}
               </div>
             ))}
-            {history.length>=2 && (
-              <div style={{ ...S.card, marginTop:8, background:"#0a0f08", borderColor:"#0e2010" }}>
+            {history.length>=2&&(
+              <div style={{ ...S.card, marginTop:8 }}>
                 <div style={{ ...S.lbl, color:C.positive, marginBottom:10 }}>Resumen anual</div>
                 {[
                   {l:"Total ingresos", v:history.reduce((a,h)=>a+h.totalIncome,0), c:C.positive},
                   {l:"Total gastos",   v:history.reduce((a,h)=>a+h.totalExp,0),    c:C.primary},
                   {l:"Balance neto",   v:history.reduce((a,h)=>a+(h.totalIncome-h.totalExp),0), c:"#4361ee"},
-                ].map((r,i) => (
-                  <div key={i} style={{ display:"flex", justifyContent:"space-between", fontSize:13, padding:"7px 0", borderBottom:"1px solid #111" }}>
+                ].map((r,i)=>(
+                  <div key={i} style={{ display:"flex", justifyContent:"space-between", fontSize:13, padding:"7px 0", borderBottom:`1px solid ${C.border}` }}>
                     <span style={{ color:C.textMid }}>{r.l}</span>
                     <span style={{ fontWeight:"bold", color:r.c }}>{usd(r.v)}</span>
                   </div>
@@ -1158,66 +1277,64 @@ function App() {
 
       {/* FOOTER */}
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.bg, borderTop:`1px solid ${C.border}`, padding:"8px 16px", textAlign:"center" }}>
-        <div style={{ fontSize:9, color:C.textDim, letterSpacing:1 }}>Guardado automáticamente · Toca cualquier número para editar</div>
+        <div style={{ fontSize:9, color:C.textDim, letterSpacing:1 }}>Guardado automaticamente · Toca cualquier numero para editar</div>
       </div>
 
-      {/* MODAL: cerrar mes */}
-      {confirmClose && (
+      {/* MODAL cerrar mes */}
+      {confirmClose&&(
         <div style={S.modal}>
           <div style={S.mbox}>
             <div style={{ fontSize:9, letterSpacing:3, color:C.textMid, textTransform:"uppercase", marginBottom:8 }}>Cerrar mes</div>
-            <div style={{ fontSize:16, fontWeight:"bold", marginBottom:8 }}>¿Guardar y empezar nuevo mes?</div>
+            <div style={{ fontSize:16, fontWeight:"bold", marginBottom:8 }}>Guardar y empezar nuevo mes?</div>
             <div style={{ fontSize:12, color:C.textMid, marginBottom:14, lineHeight:1.6 }}>
-              Los gastos fijos, tarjetas y suscripciones se reinician. Los variables e ingresos se limpian. Los cambios planeados para el próximo mes se aplican.
+              Los gastos fijos, tarjetas y suscripciones se reinician. Los variables e ingresos se limpian.
             </div>
             <div style={{ marginBottom:10 }}>
-              <div style={{ fontSize:9, color:C.textMid, letterSpacing:2, textTransform:"uppercase", marginBottom:5 }}>Nota del mes (opcional)</div>
               <textarea value={closeNote} onChange={e=>setCloseNote(e.target.value)}
-                placeholder="Ej: Empecé en Encore, pagué extra a SoFi..."
+                placeholder="Nota del mes (opcional)..."
                 rows={2} style={{ background:C.bg, border:`1px solid ${C.borderMid}`, borderRadius:8, padding:"8px 10px", color:C.text, fontFamily:FONT, fontSize:12, width:"100%", boxSizing:"border-box", resize:"none" }} />
             </div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-              <button onClick={() => setConfirmClose(false)} style={{ background:C.bgCard, border:`1px solid ${C.borderMid}`, borderRadius:8, padding:"11px", color:C.textMid, cursor:"pointer", fontFamily:FONT, fontSize:13 }}>Cancelar</button>
+              <button onClick={()=>setConfirmClose(false)} style={{ background:C.bgCard, border:`1px solid ${C.borderMid}`, borderRadius:8, padding:"11px", color:C.textMid, cursor:"pointer", fontFamily:FONT, fontSize:13 }}>Cancelar</button>
               <button onClick={closeMonth} style={{ background:C.primary, border:"none", borderRadius:8, padding:"11px", color:C.bg, fontWeight:"bold", cursor:"pointer", fontFamily:FONT, fontSize:13 }}>Cerrar mes</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL: abono */}
-      {abonoModal && (
+      {/* MODAL abono */}
+      {abonoModal&&(
         <div style={S.modal}>
           <div style={S.mbox}>
             <div style={{ fontSize:9, letterSpacing:3, color:C.textMid, textTransform:"uppercase", marginBottom:4 }}>Registrar abono</div>
             <div style={{ fontSize:17, fontWeight:"bold", marginBottom:4 }}>{abonoModal.name}</div>
             <div style={{ fontSize:11, color:C.textMid, marginBottom:16 }}>Total: {usd(abonoModal.amount)}</div>
-            <div style={{ fontSize:11, color:C.textDim, marginBottom:6 }}>¿Cuánto pagaste?</div>
-            <input autoFocus type="number" placeholder={`Máx. ${abonoModal.amount.toFixed(2)}`}
-              value={abonoInput} onChange={e => setAbonoInput(e.target.value)}
+            <input autoFocus type="number" placeholder={`Max. ${abonoModal.amount.toFixed(2)}`}
+              value={abonoInput} onChange={e=>setAbonoInput(e.target.value)}
               style={{ background:C.bg, border:`1px solid ${C.primary}`, borderRadius:8, padding:"10px 12px", color:C.text, fontFamily:FONT, fontSize:16, width:"100%", boxSizing:"border-box", marginBottom:14 }} />
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-              <button onClick={() => setAbonoModal(null)} style={{ background:C.bgCard, border:`1px solid ${C.borderMid}`, borderRadius:8, padding:"10px", color:C.textMid, cursor:"pointer", fontFamily:FONT, fontSize:13 }}>Cancelar</button>
+              <button onClick={()=>setAbonoModal(null)} style={{ background:C.bgCard, border:`1px solid ${C.borderMid}`, borderRadius:8, padding:"10px", color:C.textMid, cursor:"pointer", fontFamily:FONT, fontSize:13 }}>Cancelar</button>
               <button onClick={saveAbono} style={{ background:C.primary, border:"none", borderRadius:8, padding:"10px", color:C.bg, fontWeight:"bold", cursor:"pointer", fontFamily:FONT, fontSize:13 }}>Guardar</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL: importar */}
-      {showImport && (
+      {/* MODAL importar */}
+      {showImport&&(
         <div style={S.modal}>
           <div style={{ ...S.mbox, maxWidth:380 }}>
             <div style={{ fontSize:9, letterSpacing:3, color:C.textMid, textTransform:"uppercase", marginBottom:6 }}>Importar datos</div>
             <div style={{ fontSize:14, fontWeight:"bold", marginBottom:6 }}>Pega el contenido del archivo</div>
             <div style={{ fontSize:11, color:C.textMid, marginBottom:14, lineHeight:1.6 }}>
-              Abre el .json exportado, selecciona todo el texto, cópialo y pégalo aquí.
+              Abre el .json exportado, selecciona todo, copialo y pegalo aqui.
             </div>
-            <textarea value={importText} onChange={e => { setImportText(e.target.value); setImportError(""); }}
+            <textarea value={importText} onChange={e=>{setImportText(e.target.value);setImportError("");}}
               placeholder='{"checking":1351.96,...}' rows={5}
               style={{ background:C.bg, border:`1px solid ${importError?C.negative:C.borderMid}`, borderRadius:8, padding:"10px 12px", color:C.text, fontFamily:"monospace", fontSize:11, width:"100%", boxSizing:"border-box", marginBottom:importError?6:14, resize:"none" }} />
-            {importError && <div style={{ fontSize:11, color:C.negative, marginBottom:12 }}>{importError}</div>}
+            {importError&&<div style={{ fontSize:11, color:C.negative, marginBottom:12 }}>{importError}</div>}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-              <button onClick={() => { setShowImport(false); setImportText(""); setImportError(""); }} style={{ background:C.bgCard, border:`1px solid ${C.borderMid}`, borderRadius:8, padding:"10px", color:C.textMid, cursor:"pointer", fontFamily:FONT, fontSize:13 }}>Cancelar</button>
+              <button onClick={()=>{setShowImport(false);setImportText("");setImportError("");}} style={{ background:C.bgCard, border:`1px solid ${C.borderMid}`, borderRadius:8, padding:"10px", color:C.textMid, cursor:"pointer", fontFamily:FONT, fontSize:13 }}>Cancelar</button>
               <button onClick={importData} style={{ background:C.primary, border:"none", borderRadius:8, padding:"10px", color:C.bg, fontWeight:"bold", cursor:"pointer", fontFamily:FONT, fontSize:13 }}>Importar</button>
             </div>
           </div>
@@ -1227,7 +1344,6 @@ function App() {
     </div>
   );
 }
-
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
