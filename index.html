@@ -276,8 +276,11 @@ function App() {
   }, [checking, savings, cards, loans, expenses, income, history, currentMonth, monthGoal, plannerItems, quickSpends, appNotes]);
 
   // Derived
-  const totalExp    = expenses.reduce((a,e)=>a+e.amount,0);
-  const totalPaid   = expenses.reduce((a,e)=>a+(e.abonado||(e.paid?e.amount:0)),0);
+  const cardExpTotal = cards.reduce((a,c)=>a+c.minPay,0);
+  const cardExpPaid  = cards.reduce((a,c)=>a+(c.abonado||(c.paid?c.minPay:0)),0);
+  const nonCardExp   = expenses.filter(e=>e.cat!=="tarjeta");
+  const totalExp    = nonCardExp.reduce((a,e)=>a+e.amount,0) + cardExpTotal;
+  const totalPaid   = nonCardExp.reduce((a,e)=>a+(e.abonado||(e.paid?e.amount:0)),0) + cardExpPaid;
   const totalPend   = totalExp-totalPaid;
   const totalIncome = income.reduce((a,i)=>a+i.amount,0);
   const cardDebt    = cards.reduce((a,c)=>a+c.balance,0);
@@ -290,22 +293,25 @@ function App() {
 
   // Actions
   const updCard      = (id,f,v) => setCards(p=>p.map(c=>c.id===id?{...c,[f]:v}:c));
+  const toggleCardPaid = id => setCards(p=>p.map(c=>c.id===id?{...c,paid:!c.paid,abonado:c.paid?0:c.minPay}:c));
+  const abonarCard = (id,v) => setCards(p=>p.map(c=>c.id===id?{...c,abonado:v,paid:v>=c.minPay&&c.minPay>0}:c));
   const updLoan      = (id,f,v) => setLoans(p=>p.map(l=>l.id===id?{...l,[f]:v}:l));
   const updExpAmount = (id,v)   => setExpenses(p=>p.map(e=>e.id===id?{...e,amount:v,abonado:e.paid?v:e.abonado}:e));
   const updExpDay    = (id,v)   => setExpenses(p=>p.map(e=>e.id===id?{...e,dueDay:v}:e));
   const togglePaid   = id       => setExpenses(p=>p.map(e=>e.id===id?{...e,paid:!e.paid,abonado:e.paid?0:e.amount}:e));
   const delExp       = id       => setExpenses(p=>p.filter(e=>e.id!==id));
   const delInc       = id       => setIncome(p=>p.filter(i=>i.id!==id));
-  const delCard      = id       => {
-    setCards(p=>p.filter(c=>c.id!==id));
-    setExpenses(p=>p.filter(e=>e.cardId!==id));
-  };
+  const delCard = id => setCards(p=>p.filter(c=>c.id!==id));
   const delLoan      = id       => setLoans(p=>p.filter(l=>l.id!==id));
 
   const openAbono  = e => { setAbonoModal(e); setAbonoInput(String(e.abonado||"")); };
   const saveAbono  = () => {
     const v = Math.min(parseFloat(abonoInput)||0, abonoModal.amount);
-    setExpenses(p=>p.map(e=>e.id===abonoModal.id?{...e,abonado:v,paid:v>=e.amount}:e));
+    if (abonoModal.isCard) {
+      abonarCard(abonoModal.id, v);
+    } else {
+      setExpenses(p=>p.map(e=>e.id===abonoModal.id?{...e,abonado:v,paid:v>=e.amount}:e));
+    }
     setAbonoModal(null);
   };
 
@@ -345,10 +351,7 @@ function App() {
   const addCard = () => {
     if (!newCard.name||!newCard.limit) return;
     const color = CARD_COLORS[cards.length%CARD_COLORS.length];
-    const newC = {id:"card_"+Date.now(),name:newCard.name,color,limit:parseFloat(newCard.limit),balance:parseFloat(newCard.balance)||0,statBal:parseFloat(newCard.balance)||0,minPay:parseFloat(newCard.minPay)||0,dueDay:parseInt(newCard.dueDay)||1,cutDay:parseInt(newCard.cutDay)||0,notes:newCard.notes};
-    setCards(p=>[...p,newC]);
-    // auto-add gasto tarjeta
-    setExpenses(p=>[...p,{id:Date.now()+1,name:"Pago "+newCard.name,amount:parseFloat(newCard.minPay)||0,cat:"tarjeta",dueDay:parseInt(newCard.dueDay)||1,paid:false,abonado:0,notes:newCard.name,cardId:newC.id}]);
+    setCards(p=>[...p,{id:"card_"+Date.now(),name:newCard.name,color,limit:parseFloat(newCard.limit),balance:parseFloat(newCard.balance)||0,statBal:parseFloat(newCard.balance)||0,minPay:parseFloat(newCard.minPay)||0,dueDay:parseInt(newCard.dueDay)||1,cutDay:parseInt(newCard.cutDay)||0,notes:newCard.notes,paid:false,abonado:0}]);
     setNewCard({name:"",limit:"",balance:"",minPay:"",dueDay:1,cutDay:0,notes:""});
     setShowAddCard(false);
   };
@@ -374,6 +377,7 @@ function App() {
     const baseExp = expenses.filter(e=>e.cat!=="variable").map(e=>({...e,paid:false,abonado:0}));
     const plannerExp = plannerItems.map(p=>({...p,id:Date.now()+Math.random(),paid:false,abonado:0}));
     setExpenses([...baseExp,...plannerExp]);
+    setCards(p=>p.map(c=>({...c,paid:false,abonado:0})));
     setPlannerItems([]); setIncome([]); setQuickSpends([]); setCloseNote("");
     const parts=currentMonth.split(" "), mIdx=MONTHS.indexOf(parts[0]), yr=parseInt(parts[1]);
     setCurrentMonth(`${MONTHS[mIdx===11?0:mIdx+1]} ${mIdx===11?yr+1:yr}`);
@@ -515,7 +519,8 @@ function App() {
               </div>
             )}
 
-            {CATS.map(cat => {
+            {/* Gastos fijos, suscripciones, variables */}
+            {["fijo","suscripcion","variable"].map(cat => {
               const list = expenses.filter(e=>e.cat===cat).sort((a,b)=>a.dueDay-b.dueDay);
               if (!list.length && cat!=="suscripcion") return null;
               const catTotal = list.reduce((a,e)=>a+e.amount,0);
@@ -543,6 +548,60 @@ function App() {
                 </div>
               );
             })}
+
+            {/* Tarjetas — siempre desde Deudas */}
+            <div style={{ marginBottom:22 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                <div style={S.lbl}>Tarjetas</div>
+                <span style={{ fontSize:12, color:C.primary }}>{usd(cardExpTotal)}</span>
+              </div>
+              {cards.length===0 && (
+                <div style={{ fontSize:11, color:C.textDim, padding:"10px 0", textAlign:"center" }}>
+                  Agrega tarjetas en la pestana Deudas
+                </div>
+              )}
+              {[...cards].sort((a,b)=>a.dueDay-b.dueDay).map(c => {
+                const abonado = c.abonado || (c.paid ? c.minPay : 0);
+                const partial = abonado > 0 && abonado < c.minPay;
+                const partPct = c.minPay > 0 ? Math.round((abonado/c.minPay)*100) : 0;
+                return (
+                  <div key={c.id} style={{ padding:"11px 0", borderBottom:`1px solid ${C.border}`, opacity:c.paid?0.35:1 }}>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                        <button onClick={()=>toggleCardPaid(c.id)} style={{
+                          width:22, height:22, borderRadius:6, flexShrink:0, cursor:"pointer",
+                          display:"flex", alignItems:"center", justifyContent:"center",
+                          border: c.paid?"none": partial?`1.5px solid ${C.warning}`:`1.5px solid ${c.color}`,
+                          background: c.paid?c.color: partial?C.warning+"22":"transparent"
+                        }}>
+                          {c.paid   && <span style={{ color:C.bg, fontSize:11, fontWeight:"bold" }}>v</span>}
+                          {partial  && <span style={{ color:C.warning, fontSize:11, fontWeight:"bold" }}>~</span>}
+                        </button>
+                        <div>
+                          <div style={{ fontSize:13, textDecoration:c.paid?"line-through":"none" }}>{c.name}</div>
+                          <div style={{ fontSize:10, color:C.textDim }}>Dia {c.dueDay}{c.notes?` · ${c.notes}`:""}</div>
+                        </div>
+                      </div>
+                      <div style={{ display:"flex", alignItems:"center", gap:7 }}>
+                        <div style={{ textAlign:"right" }}>
+                          <div style={{ fontSize:14, fontWeight:"bold", color:partial?C.warning:c.color }}>
+                            {usd(c.minPay)}
+                            <span style={{ fontSize:9, color:C.textDim, marginLeft:4 }}>min</span>
+                          </div>
+                          {partial && <div style={{ fontSize:9, color:C.warning }}>abonado {usd(abonado)}</div>}
+                        </div>
+                        <button onClick={()=>{ setAbonoModal({id:c.id,name:c.name,amount:c.minPay,isCard:true}); setAbonoInput(String(c.abonado||"")); }} style={{ background:C.bgCard, border:`1px solid ${C.borderMid}`, borderRadius:6, color:C.textMid, cursor:"pointer", fontSize:11, padding:"3px 7px" }}>$+</button>
+                      </div>
+                    </div>
+                    {partial && (
+                      <div style={{ marginTop:6, height:3, background:C.border, borderRadius:2, overflow:"hidden" }}>
+                        <div style={{ height:"100%", width:`${partPct}%`, background:C.warning, borderRadius:2 }} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
 
             {/* Gastos del dia */}
             <div style={{ marginBottom:22 }}>
@@ -747,7 +806,7 @@ function App() {
             {showAddCard && (
               <div style={{ ...S.card, marginBottom:16, borderColor:C.primary }}>
                 <div style={{ fontSize:9, color:C.primary, letterSpacing:3, textTransform:"uppercase", marginBottom:10 }}>Nueva tarjeta</div>
-                <div style={{ fontSize:10, color:C.textDim, marginBottom:10 }}>Se creara automaticamente el gasto en Gastos → Tarjetas</div>
+                <div style={{ fontSize:10, color:C.textDim, marginBottom:10 }}>Aparecera automaticamente en Gastos → Tarjetas</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
                   <input placeholder="Nombre (ej. Chase)" value={newCard.name} onChange={e=>setNewCard(p=>({...p,name:e.target.value}))} style={S.inp} />
                   <input placeholder="Limite $" type="number" value={newCard.limit} onChange={e=>setNewCard(p=>({...p,limit:e.target.value}))} style={S.inp} />
