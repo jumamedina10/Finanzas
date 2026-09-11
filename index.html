@@ -210,6 +210,15 @@
     // del préstamo. Ahora Préstamos se calcula solo desde la pestaña Deudas, así que se retiran esas
     // líneas manuales (se identifican por la nota "préstamo") para no contar el mismo pago dos veces.
     const stripLoanDuplicateExpenses = list => (list||[]).filter(x => x.notes !== "préstamo");
+    // la fila fija "Colombia"/"Venezuela" se conecta al total de Responsabilidades por el campo
+    // isRemittance. Datos guardados antes de que ese campo existiera (mismo id de siempre) se quedaron
+    // como un gasto suelto con su propio monto fijo, desconectado de lo que se agrega en Responsabilidades.
+    // Se reconecta por id, sin tocar nada más de la fila (nombre, notas, pagos ya registrados).
+    const withRemittanceLink = list => (list||[]).map(x => {
+      if (x.id===1781022331707 && !x.isRemittance) return { ...x, isRemittance:"colombia" };
+      if (x.id==="venezuela_row" && !x.isRemittance) return { ...x, isRemittance:"venezuela" };
+      return x;
+    });
 
     function App() {
       const saved = load();
@@ -221,7 +230,7 @@
       const [accounts, setAccounts] = useState(saved?.accounts ?? INIT_ACCOUNTS);
       const [cards, setCards] = useState(() => withTitularDefault(saved?.cards ?? INIT_CARDS));
       const [loans, setLoans] = useState(() => withTitularDefault(saved?.loans ?? INIT_LOANS));
-      const [expenses, setExpenses] = useState(() => stripLoanDuplicateExpenses(withTitularDefault(saved?.expenses ?? INIT_EXPENSES)));
+      const [expenses, setExpenses] = useState(() => withRemittanceLink(stripLoanDuplicateExpenses(withTitularDefault(saved?.expenses ?? INIT_EXPENSES))));
       const [income, setIncome] = useState(saved?.income ?? INIT_INCOME);
       const [remittances, setRemittances] = useState(saved?.remittances ?? INIT_REMITTANCES);
       const [copRate, setCopRate] = useState(saved?.copRate ?? COP_RATE); // COP por 1 USD, editable porque cambia
@@ -592,13 +601,11 @@
                   border: full?"none":partial?`2px solid ${C.warning}`:`2px solid ${C.primary}`,
                   background: full?C.primary:partial?C.warning+"22":"transparent",
                 }}>{full && <span style={{ color:"#fff", fontSize:11, fontWeight:"700" }}>✓</span>}{partial && <span style={{ color:C.warning, fontSize:11, fontWeight:"700" }}>~</span>}</button>
-                {!full && (
-                  <button onClick={()=>openPayment("expense", e.id)} title="Abonar (pago parcial)" style={{
-                    width:16, height:16, borderRadius:5, flexShrink:0, cursor:"pointer",
-                    display:"flex", alignItems:"center", justifyContent:"center",
-                    border:`1px solid ${C.textDim}`, background:"none", color:C.textDim, fontSize:10, lineHeight:1, padding:0,
-                  }}>+</button>
-                )}
+                <button onClick={()=>openPayment("expense", e.id)} title={full?"Ver historial de pagos":"Abonar (pago parcial)"} style={{
+                  width:16, height:16, borderRadius:5, flexShrink:0, cursor:"pointer",
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  border:`1px solid ${C.textDim}`, background:"none", color:C.textDim, fontSize:10, lineHeight:1, padding:0,
+                }}>{full?"⋯":"+"}</button>
                 <div style={{ minWidth:0 }}>
                   <div style={{ fontSize:15, fontWeight:"500", color:C.text, textDecoration:full?"line-through":"none" }}>
                     {e.isRemittance ? e.name : <Editable value={e.name} onSave={v=>updField(setExpenses,e.id,"name",v)} type="text" color={C.text} C={C} width={150} />}
@@ -686,9 +693,7 @@
                 <button onClick={()=>togglePaid(kind,item.id)} title={full?"Desmarcar":"Marcar como pagado"} style={{ width:22, height:22, borderRadius:7, flexShrink:0, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", border:full?"none":partial?`2px solid ${C.warning}`:`2px solid ${item.color}`, background:full?item.color:partial?C.warning+"22":"transparent" }}>
                   {full && <span style={{ color:"#fff", fontSize:11, fontWeight:"700" }}>✓</span>}{partial && <span style={{ color:C.warning, fontSize:11 }}>~</span>}
                 </button>
-                {!full && (
-                  <button onClick={()=>openPayment(kind,item.id)} title="Abonar (pago parcial)" style={{ width:16, height:16, borderRadius:5, flexShrink:0, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", border:`1px solid ${C.textDim}`, background:"none", color:C.textDim, fontSize:10, lineHeight:1, padding:0 }}>+</button>
-                )}
+                <button onClick={()=>openPayment(kind,item.id)} title={full?"Ver historial de pagos":"Abonar (pago parcial)"} style={{ width:16, height:16, borderRadius:5, flexShrink:0, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", border:`1px solid ${C.textDim}`, background:"none", color:C.textDim, fontSize:10, lineHeight:1, padding:0 }}>{full?"⋯":"+"}</button>
                 <div style={{ minWidth:0 }}>
                   <div style={{ fontSize:15, fontWeight:"500", color:C.text }}>{item.name}</div>
                   {partial && (
