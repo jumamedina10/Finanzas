@@ -112,16 +112,14 @@
     ];
 
     const INIT_LOANS = [
-      { id:"penfed", titular:"juanma", name:"PenFed", color:"#06b6d4", original:5000, balance:2945.43, payment:264.10, apr:18.5,  dueDay:26, notes:"Pago total $264.10 · mi parte $164.10" },
-      { id:"sofi",   titular:"juanma", name:"SoFi",   color:"#8b5cf6", original:7000, balance:6544.86, payment:238.31, apr:32.75, dueDay:12, notes:"Mínimo $238.31 · pagando $250" },
+      { id:"penfed", titular:"juanma", name:"PenFed", color:"#06b6d4", original:5000, balance:2945.43, payment:264.10, apr:18.5,  dueDay:26, notes:"Pago total $264.10 · mi parte $164.10", payments:[] },
+      { id:"sofi",   titular:"juanma", name:"SoFi",   color:"#8b5cf6", original:7000, balance:6544.86, payment:238.31, apr:32.75, dueDay:12, notes:"Mínimo $238.31 · pagando $250", payments:[] },
     ];
 
     const INIT_EXPENSES = [
       { id:2,  titular:"juanma", name:"Alimentación",    amount:150,    cat:"fijo",        dueDay:1,  notes:"", payments:[] },
       { id:3,  titular:"juanma", name:"Papá",            amount:60,     cat:"fijo",        dueDay:1,  notes:"", payments:[{id:301,amount:60,date:"1 sept"}] },
       { id:8,  titular:"juanma", name:"Teléfono",        amount:324.91, cat:"fijo",        dueDay:10, notes:"", payments:[{id:801,amount:324.91,date:"10 sept"}] },
-      { id:9,  titular:"juanma", name:"PenFed (cuota)",  amount:264,    cat:"fijo",        dueDay:26, notes:"préstamo", payments:[] },
-      { id:10, titular:"juanma", name:"SoFi (cuota)",    amount:250,    cat:"fijo",        dueDay:12, notes:"préstamo", payments:[] },
       { id:11, titular:"juanma", name:"SAE",             amount:240,    cat:"fijo",        dueDay:15, notes:"", payments:[] },
       { id:21, titular:"juanma", name:"AppleCare",       amount:20,     cat:"suscripcion", dueDay:19, notes:"", payments:[] },
       { id:24, titular:"juanma", name:"Haven",           amount:13,     cat:"suscripcion", dueDay:10, notes:"", payments:[{id:2401,amount:13,date:"10 sept"}] },
@@ -204,6 +202,15 @@
       );
     }
 
+    // datos guardados antes de que existiera "titular" (o cargados a medias) quedaban sin ese campo,
+    // y como los filtros de JuanMa/Mari comparan contra un valor exacto, un titular vacío los hacía
+    // desaparecer de las dos pestañas personales (solo se veían en "Todos"). Se rellenan con "conjunta".
+    const withTitularDefault = list => (list||[]).map(x => x.titular ? x : { ...x, titular:"conjunta" });
+    // los "PenFed (cuota)"/"SoFi (cuota)" eran gastos fijos escritos a mano para representar la cuota
+    // del préstamo. Ahora Préstamos se calcula solo desde la pestaña Deudas, así que se retiran esas
+    // líneas manuales (se identifican por la nota "préstamo") para no contar el mismo pago dos veces.
+    const stripLoanDuplicateExpenses = list => (list||[]).filter(x => x.notes !== "préstamo");
+
     function App() {
       const saved = load();
       const [darkMode, setDarkMode] = useState(saved?.darkMode ?? true);
@@ -212,9 +219,9 @@
       const [tab, setTab] = useState("gastos");
 
       const [accounts, setAccounts] = useState(saved?.accounts ?? INIT_ACCOUNTS);
-      const [cards, setCards] = useState(saved?.cards ?? INIT_CARDS);
-      const [loans, setLoans] = useState(saved?.loans ?? INIT_LOANS);
-      const [expenses, setExpenses] = useState(saved?.expenses ?? INIT_EXPENSES);
+      const [cards, setCards] = useState(() => withTitularDefault(saved?.cards ?? INIT_CARDS));
+      const [loans, setLoans] = useState(() => withTitularDefault(saved?.loans ?? INIT_LOANS));
+      const [expenses, setExpenses] = useState(() => stripLoanDuplicateExpenses(withTitularDefault(saved?.expenses ?? INIT_EXPENSES)));
       const [income, setIncome] = useState(saved?.income ?? INIT_INCOME);
       const [remittances, setRemittances] = useState(saved?.remittances ?? INIT_REMITTANCES);
       const [copRate, setCopRate] = useState(saved?.copRate ?? COP_RATE); // COP por 1 USD, editable porque cambia
@@ -278,6 +285,9 @@
 
       const cardExpTotal = cards.reduce((a,c)=>a+c.minPay,0);
       const cardExpPaid  = cards.reduce((a,c)=>a+paidAmt(c),0);
+      const loanPaymentTotal = loans.reduce((a,l)=>a+l.payment,0);
+      const loanPaymentPaid  = loans.reduce((a,l)=>a+paidAmt(l),0);
+      const deudaMensualTotal = cardExpTotal + loanPaymentTotal;
       const nonCardExp = expensesResolved.filter(e=>e.cat!=="tarjeta" && e.cat!=="variable");
       const varExp = expensesResolved.filter(e=>e.cat==="variable");
       const fixedTotal = nonCardExp.reduce((a,e)=>a+e.amount,0);
@@ -287,8 +297,8 @@
       const fijoTotal = expensesResolved.filter(e=>e.cat==="fijo").reduce((a,e)=>a+e.amount,0);
       const subsTotal = expensesResolved.filter(e=>e.cat==="suscripcion").reduce((a,e)=>a+e.amount,0);
 
-      const totalExp = fixedTotal + varTotal + cardExpTotal + salidaBudget;
-      const totalPaid = fixedPaid + varPaid + cardExpPaid;
+      const totalExp = fixedTotal + varTotal + cardExpTotal + loanPaymentTotal + salidaBudget;
+      const totalPaid = fixedPaid + varPaid + cardExpPaid + loanPaymentPaid;
       const totalPend = totalExp - totalPaid;
       const totalIncome = income.reduce((a,i)=>a+i.amount,0);
       const salidaTotal = salidas.reduce((a,s)=>a+s.amount,0);
@@ -364,8 +374,9 @@
       const delRemit = (key, id) => setRemittances(p=>({ ...p, [key]:p[key].filter(r=>r.id!==id) }));
 
       // ---------- pagos parciales ----------
-      const paymentTargetList = kind => kind==="expense" ? expensesResolved : cards;
-      const paymentSetFn = kind => kind==="expense" ? setExpenses : setCards;
+      const paymentTargetList = kind => kind==="expense" ? expensesResolved : kind==="loan" ? loans : cards;
+      const paymentSetFn = kind => kind==="expense" ? setExpenses : kind==="loan" ? setLoans : setCards;
+      const paymentTargetAmt = (kind, item) => kind==="expense" ? item.amount : kind==="loan" ? item.payment : item.minPay;
       const openPayment = (kind, id) => { setPayAmount(""); setPaymentModal({ kind, id }); };
       const addPaymentEntry = amt => {
         if (!paymentModal || !amt) return;
@@ -382,7 +393,7 @@
       const togglePaid = (kind, id) => {
         const item = paymentTargetList(kind).find(it=>it.id===id);
         if (!item) return;
-        const targetAmt = kind==="expense" ? item.amount : item.minPay;
+        const targetAmt = paymentTargetAmt(kind, item);
         const already = isFullyPaid(item, targetAmt);
         paymentSetFn(kind)(prev => prev.map(it => {
           if (it.id!==id) return it;
@@ -649,6 +660,45 @@
         );
       };
 
+      const matchesGastosFiltro = e => {
+        if (gastosFiltro==="todos") return true;
+        if (e.isRemittance==="colombia") return gastosFiltro==="juanma";
+        if (e.isRemittance==="venezuela") return gastosFiltro==="mari";
+        return e.titular===gastosFiltro;
+      };
+      const openAddExp = cat => { setNewExp(p=>({...p, cat, titular: gastosFiltro==="todos"?"conjunta":gastosFiltro})); setShowAddExp(true); };
+
+      // fila de tarjeta o prestamo con check de un click + abono parcial, igual que un gasto
+      const renderDebtRow = (item, kind, amt) => {
+        const abonado = paidAmt(item), full = isFullyPaid(item, amt), partial = abonado>0 && !full;
+        return (
+          <div key={item.id} style={{ padding:"12px 0", borderBottom:`1px solid ${C.border}`, opacity:full?0.45:1 }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:0 }}>
+                <button onClick={()=>togglePaid(kind,item.id)} title={full?"Desmarcar":"Marcar como pagado"} style={{ width:22, height:22, borderRadius:7, flexShrink:0, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", border:full?"none":partial?`2px solid ${C.warning}`:`2px solid ${item.color}`, background:full?item.color:partial?C.warning+"22":"transparent" }}>
+                  {full && <span style={{ color:"#fff", fontSize:11, fontWeight:"700" }}>✓</span>}{partial && <span style={{ color:C.warning, fontSize:11 }}>~</span>}
+                </button>
+                {!full && (
+                  <button onClick={()=>openPayment(kind,item.id)} title="Abonar (pago parcial)" style={{ width:16, height:16, borderRadius:5, flexShrink:0, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", border:`1px solid ${C.textDim}`, background:"none", color:C.textDim, fontSize:10, lineHeight:1, padding:0 }}>+</button>
+                )}
+                <div style={{ minWidth:0 }}>
+                  <div style={{ fontSize:15, fontWeight:"500", color:C.text }}>{item.name}</div>
+                  {partial && (
+                    <>
+                      <div style={{ fontSize:11, color:C.textDim, marginTop:2 }}>{usd(abonado)} de {usd(amt)} (falta {usd(amt-abonado)})</div>
+                      <div style={{ marginTop:4, height:5, borderRadius:3, background:C.border, overflow:"hidden", maxWidth:180 }}>
+                        <div style={{ height:"100%", width:`${Math.max(2,Math.min(100,(abonado/amt)*100))}%`, background:C.warning, borderRadius:3 }} />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div style={{ fontSize:15, fontWeight:"600", color:partial?C.warning:item.color }}>{usd(amt)} <span style={{ fontSize:11, color:C.textDim }}>{kind==="card"?"min":"cuota"}</span></div>
+            </div>
+          </div>
+        );
+      };
+
       return (
         <div data-theme={darkMode?"dark":"light"} className="fm-shell" style={{ fontFamily:C.font, background:C.bg, minHeight:"100vh", color:C.text, maxWidth:480, margin:"0 auto", paddingBottom:60 }}>
 
@@ -783,9 +833,10 @@
                   <div style={{ ...lbl, marginBottom:12 }}>Gastos del mes por categoría</div>
                   {[
                     { l:"Fijos", v:fijoTotal },
-                    { l:"Tarjetas", v:cardExpTotal },
-                    { l:"Suscripciones", v:subsTotal },
                     { l:"Variables", v:varTotal },
+                    { l:"Suscripciones", v:subsTotal },
+                    { l:"Tarjetas", v:cardExpTotal },
+                    { l:"Préstamos", v:loanPaymentTotal },
                     { l:"Salidas", v:salidaBudget },
                   ].filter(r=>r.v>0).map((r,i)=>(
                     <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 0", borderBottom:`1px solid ${C.border}` }}>
@@ -813,109 +864,128 @@
             )}
 
             {/* GASTOS */}
-            {tab==="gastos" && (
+            {tab==="gastos" && (() => {
+              const fijosView = expensesResolved.filter(e=>e.cat==="fijo").filter(matchesGastosFiltro).sort((a,b)=>a.dueDay-b.dueDay);
+              const subsView = expensesResolved.filter(e=>e.cat==="suscripcion").filter(matchesGastosFiltro).sort((a,b)=>a.dueDay-b.dueDay);
+              const varExpView = varExp.filter(matchesGastosFiltro).sort((a,b)=>a.dueDay-b.dueDay);
+              const fijosViewTotal = fijosView.reduce((a,e)=>a+e.amount,0);
+              const subsViewTotal = subsView.reduce((a,e)=>a+e.amount,0);
+              const varViewTotal = varExpView.reduce((a,e)=>a+e.amount,0);
+              const sinNada = (label) => <div style={{ fontSize:13, color:C.textDim, padding:"10px 0" }}>Sin {label}{gastosFiltro==="todos"?" este mes":` de ${TITULARES[gastosFiltro].label}`}</div>;
+
+              const addForm = (
+                <div style={{ ...card, marginBottom:16 }}>
+                  <div style={{ fontSize:11, color:C.textDim, marginBottom:10, textTransform:"uppercase", letterSpacing:1 }}>Agregando: {newExp.cat==="fijo"?"Fijo":newExp.cat==="suscripcion"?"Suscripción":"Variable"}</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
+                    <input placeholder="Nombre" value={newExp.name} onChange={e=>setNewExp(p=>({...p,name:e.target.value}))} style={inp} />
+                    <input placeholder="Monto $" type="number" value={newExp.amount} onChange={e=>setNewExp(p=>({...p,amount:e.target.value}))} style={inp} />
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:12 }}>
+                    <select value={newExp.cat} onChange={e=>setNewExp(p=>({...p,cat:e.target.value}))} style={inp}>
+                      <option value="fijo">Fijo</option>
+                      <option value="suscripcion">Suscripcion</option>
+                      <option value="variable">Variable</option>
+                    </select>
+                    <input placeholder="Dia" type="number" value={newExp.dueDay} onChange={e=>setNewExp(p=>({...p,dueDay:parseInt(e.target.value)||1}))} style={inp} />
+                  </div>
+                  <div style={{ display:"flex", gap:8, marginBottom:10 }}>
+                    {["current","next"].map(t => (
+                      <button key={t} onClick={()=>setNewExp(p=>({...p,target:t}))} style={{ flex:1, padding:"9px", borderRadius:10, border:`1.5px solid ${newExp.target===t?C.primary:C.borderMid}`, background:newExp.target===t?C.primary+"22":"none", color:newExp.target===t?C.primary:C.textMid, cursor:"pointer", fontSize:13, fontFamily:C.font, fontWeight:"500" }}>
+                        {t==="current"?"Este mes":"Proximo mes"}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ fontSize:11, color:C.textDim, marginBottom:6 }}>De donde viene (solo referencia, el total sigue siendo de los dos)</div>
+                  <div style={{ display:"flex", gap:8, marginBottom:12 }}>
+                    {Object.keys(TITULARES).map(k=>(
+                      <button key={k} type="button" onClick={()=>setNewExp(p=>({...p,titular:k}))} style={{ flex:1, padding:"8px 6px", borderRadius:10, cursor:"pointer", fontFamily:C.font, fontSize:12, fontWeight:"600", border:`1.5px solid ${newExp.titular===k?TITULARES[k].color:C.borderMid}`, background:newExp.titular===k?TITULARES[k].color+"22":"none", color:newExp.titular===k?TITULARES[k].color:C.textMid }}>{TITULARES[k].label}</button>
+                    ))}
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                    <button type="button" onClick={()=>setShowAddExp(false)} style={sbtn}>Cancelar</button>
+                    <button onClick={addExp} style={btn()}>Guardar</button>
+                  </div>
+                </div>
+              );
+
+              return (
               <div style={{ marginTop:20 }}>
                 <div style={{ display:"flex", gap:8, marginBottom:6 }}>
-                  {[["todos","Todos",C.primary],["juanma",TITULARES.juanma.label,TITULARES.juanma.color],["mari",TITULARES.mari.label,TITULARES.mari.color]].map(([k,label,color])=>(
+                  {[["todos","Nosotros",C.primary],["juanma",TITULARES.juanma.label,TITULARES.juanma.color],["mari",TITULARES.mari.label,TITULARES.mari.color]].map(([k,label,color])=>(
                     <button key={k} onClick={()=>setGastosFiltro(k)} style={{ flex:1, padding:"9px 6px", borderRadius:10, cursor:"pointer", fontFamily:C.font, fontSize:13, fontWeight:"600", border:`1.5px solid ${gastosFiltro===k?color:C.borderMid}`, background:gastosFiltro===k?color+"22":"none", color:gastosFiltro===k?color:C.textMid }}>{label}</button>
                   ))}
                 </div>
 
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, marginTop:16 }}>
-                  <span style={lbl}>Gastos fijos y suscripciones</span>
-                  <button style={btn()} onClick={()=>{ const next=!showAddExp; setShowAddExp(next); if (next) setNewExp(p=>({...p, titular: gastosFiltro==="todos"?"conjunta":gastosFiltro})); }}>+ Agregar</button>
-                </div>
-
-                {showAddExp && (
-                  <div style={{ ...card, marginBottom:16 }}>
-                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
-                      <input placeholder="Nombre" value={newExp.name} onChange={e=>setNewExp(p=>({...p,name:e.target.value}))} style={inp} />
-                      <input placeholder="Monto $" type="number" value={newExp.amount} onChange={e=>setNewExp(p=>({...p,amount:e.target.value}))} style={inp} />
-                    </div>
-                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:12 }}>
-                      <select value={newExp.cat} onChange={e=>setNewExp(p=>({...p,cat:e.target.value}))} style={inp}>
-                        <option value="fijo">Fijo</option>
-                        <option value="suscripcion">Suscripcion</option>
-                        <option value="variable">Variable</option>
-                      </select>
-                      <input placeholder="Dia" type="number" value={newExp.dueDay} onChange={e=>setNewExp(p=>({...p,dueDay:parseInt(e.target.value)||1}))} style={inp} />
-                    </div>
-                    <div style={{ display:"flex", gap:8, marginBottom:10 }}>
-                      {["current","next"].map(t => (
-                        <button key={t} onClick={()=>setNewExp(p=>({...p,target:t}))} style={{ flex:1, padding:"9px", borderRadius:10, border:`1.5px solid ${newExp.target===t?C.primary:C.borderMid}`, background:newExp.target===t?C.primary+"22":"none", color:newExp.target===t?C.primary:C.textMid, cursor:"pointer", fontSize:13, fontFamily:C.font, fontWeight:"500" }}>
-                          {t==="current"?"Este mes":"Proximo mes"}
-                        </button>
-                      ))}
-                    </div>
-                    <div style={{ fontSize:11, color:C.textDim, marginBottom:6 }}>De donde viene (solo referencia, el total sigue siendo de los dos)</div>
-                    <div style={{ display:"flex", gap:8, marginBottom:12 }}>
-                      {Object.keys(TITULARES).map(k=>(
-                        <button key={k} type="button" onClick={()=>setNewExp(p=>({...p,titular:k}))} style={{ flex:1, padding:"8px 6px", borderRadius:10, cursor:"pointer", fontFamily:C.font, fontSize:12, fontWeight:"600", border:`1.5px solid ${newExp.titular===k?TITULARES[k].color:C.borderMid}`, background:newExp.titular===k?TITULARES[k].color+"22":"none", color:newExp.titular===k?TITULARES[k].color:C.textMid }}>{TITULARES[k].label}</button>
-                      ))}
-                    </div>
-                    <button onClick={addExp} style={{...btn(),width:"100%",padding:"12px",fontSize:15}}>Guardar</button>
+                {/* FIJOS */}
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, marginTop:20 }}>
+                  <span style={lbl}>Fijos</span>
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <span style={{ fontSize:14, color:C.primary, fontWeight:"600" }}>{usd(fijosViewTotal)}</span>
+                    <button style={btn()} onClick={()=>openAddExp("fijo")}>+ Agregar</button>
                   </div>
-                )}
+                </div>
+                {showAddExp && newExp.cat==="fijo" && addForm}
+                {fijosView.length===0 ? sinNada("gastos fijos") : fijosView.map(ExpenseRow)}
 
-                {expensesResolved.filter(e=>e.cat!=="tarjeta" && e.cat!=="variable")
-                  .filter(e=>{
-                    if (gastosFiltro==="todos") return true;
-                    if (e.isRemittance==="colombia") return gastosFiltro==="juanma";
-                    if (e.isRemittance==="venezuela") return gastosFiltro==="mari";
-                    return e.titular===gastosFiltro;
-                  })
-                  .sort((a,b)=>a.dueDay-b.dueDay).map(ExpenseRow)}
+                {/* VARIABLES */}
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, marginTop:24 }}>
+                  <span style={lbl}>Variables</span>
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <span style={{ fontSize:14, color:C.primary, fontWeight:"600" }}>{usd(varViewTotal)}</span>
+                    <button style={btn()} onClick={()=>openAddExp("variable")}>+ Agregar</button>
+                  </div>
+                </div>
+                {showAddExp && newExp.cat==="variable" && addForm}
+                {varExpView.length===0 ? sinNada("gastos variables") : varExpView.map(ExpenseRow)}
 
-                <div style={{ ...lbl, marginTop:20 }}>Variables</div>
-                {(() => {
-                  const varExpView = varExp.filter(e=>gastosFiltro==="todos" || e.titular===gastosFiltro);
-                  return varExpView.length===0
-                    ? <div style={{ fontSize:13, color:C.textDim, padding:"10px 0" }}>Sin gastos variables{gastosFiltro==="todos"?" este mes":` de ${TITULARES[gastosFiltro].label}`}</div>
-                    : varExpView.map(ExpenseRow);
-                })()}
+                {/* SUSCRIPCIONES */}
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, marginTop:24 }}>
+                  <span style={lbl}>Suscripciones</span>
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <span style={{ fontSize:14, color:C.primary, fontWeight:"600" }}>{usd(subsViewTotal)}</span>
+                    <button style={btn()} onClick={()=>openAddExp("suscripcion")}>+ Agregar</button>
+                  </div>
+                </div>
+                {showAddExp && newExp.cat==="suscripcion" && addForm}
+                {subsView.length===0 ? sinNada("suscripciones") : subsView.map(ExpenseRow)}
 
-                <div style={{ marginTop:24 }}>
-                  {(gastosFiltro==="todos" || gastosFiltro==="juanma") && RemitPanel("colombia","Colombia","#6366f1")}
-                  {(gastosFiltro==="todos" || gastosFiltro==="mari") && RemitPanel("venezuela","Venezuela","#ec4899")}
+                {/* DEUDA MENSUAL: tarjetas + prestamos */}
+                <div style={{ ...card, marginTop:24, marginBottom:16, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <div>
+                    <div style={lbl}>Deuda mensual</div>
+                    <div style={{ fontSize:12, color:C.textDim }}>Tarjetas + préstamos, lo que sale este mes</div>
+                  </div>
+                  <div style={{ fontSize:20, fontWeight:"700", color:C.primary }}>{usd(deudaMensualTotal)}</div>
                 </div>
 
+                {/* TARJETAS */}
                 <div style={{ marginTop:8, marginBottom:10 }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
                     <span style={lbl}>Tarjetas (pago mínimo)</span>
                     <span style={{ fontSize:14, color:C.primary, fontWeight:"600" }}>{usd(cardExpTotal)}</span>
                   </div>
-                  {[...cards].sort((a,b)=>a.dueDay-b.dueDay).map(c => {
-                    const abonado = paidAmt(c), full = isFullyPaid(c,c.minPay), partial = abonado>0 && !full;
-                    return (
-                      <div key={c.id} style={{ padding:"12px 0", borderBottom:`1px solid ${C.border}`, opacity:full?0.45:1 }}>
-                        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                          <div style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:0 }}>
-                            <button onClick={()=>togglePaid("card",c.id)} title={full?"Desmarcar":"Marcar como pagado"} style={{ width:22, height:22, borderRadius:7, flexShrink:0, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", border:full?"none":partial?`2px solid ${C.warning}`:`2px solid ${c.color}`, background:full?c.color:partial?C.warning+"22":"transparent" }}>
-                              {full && <span style={{ color:"#fff", fontSize:11, fontWeight:"700" }}>✓</span>}{partial && <span style={{ color:C.warning, fontSize:11 }}>~</span>}
-                            </button>
-                            {!full && (
-                              <button onClick={()=>openPayment("card",c.id)} title="Abonar (pago parcial)" style={{ width:16, height:16, borderRadius:5, flexShrink:0, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", border:`1px solid ${C.textDim}`, background:"none", color:C.textDim, fontSize:10, lineHeight:1, padding:0 }}>+</button>
-                            )}
-                            <div style={{ minWidth:0 }}>
-                              <div style={{ fontSize:15, fontWeight:"500", color:C.text }}>{c.name}</div>
-                              {partial && (
-                                <>
-                                  <div style={{ fontSize:11, color:C.textDim, marginTop:2 }}>{usd(abonado)} de {usd(c.minPay)} (falta {usd(c.minPay-abonado)})</div>
-                                  <div style={{ marginTop:4, height:5, borderRadius:3, background:C.border, overflow:"hidden", maxWidth:180 }}>
-                                    <div style={{ height:"100%", width:`${Math.max(2,Math.min(100,(abonado/c.minPay)*100))}%`, background:C.warning, borderRadius:3 }} />
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <div style={{ fontSize:15, fontWeight:"600", color:partial?C.warning:c.color }}>{usd(c.minPay)} <span style={{ fontSize:11, color:C.textDim }}>min</span></div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {[...cards].sort((a,b)=>a.dueDay-b.dueDay).map(c => renderDebtRow(c, "card", c.minPay))}
+                </div>
+
+                {/* PRESTAMOS */}
+                <div style={{ marginTop:8, marginBottom:10 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                    <span style={lbl}>Préstamos (cuota)</span>
+                    <span style={{ fontSize:14, color:C.primary, fontWeight:"600" }}>{usd(loanPaymentTotal)}</span>
+                  </div>
+                  {loans.length===0
+                    ? <div style={{ fontSize:13, color:C.textDim, padding:"10px 0" }}>Sin préstamos registrados</div>
+                    : [...loans].sort((a,b)=>a.dueDay-b.dueDay).map(l => renderDebtRow(l, "loan", l.payment))}
+                </div>
+
+                {/* RESPONSABILIDADES COLOMBIA / VENEZUELA */}
+                <div style={{ marginTop:24 }}>
+                  {(gastosFiltro==="todos" || gastosFiltro==="juanma") && RemitPanel("colombia","Colombia","#6366f1")}
+                  {(gastosFiltro==="todos" || gastosFiltro==="mari") && RemitPanel("venezuela","Venezuela","#ec4899")}
                 </div>
               </div>
-            )}
+              );
+            })()}
 
             {/* INGRESOS */}
             {tab==="ingresos" && (
@@ -1162,9 +1232,10 @@
                   {(()=>{
                     const cats = [
                       { label:"Fijos",         color:C.primary, value:fijoTotal },
-                      { label:"Tarjetas",      color:"#6366f1", value:cardExpTotal },
-                      { label:"Suscripciones", color:"#8b5cf6", value:subsTotal },
                       { label:"Variables",     color:C.positive, value:varTotal },
+                      { label:"Suscripciones", color:"#8b5cf6", value:subsTotal },
+                      { label:"Tarjetas",      color:"#6366f1", value:cardExpTotal },
+                      { label:"Préstamos",     color:"#06b6d4", value:loanPaymentTotal },
                       { label:"Salidas",       color:C.warning, value:salidaBudget },
                     ].filter(c=>c.value>0);
                     const total = cats.reduce((a,c)=>a+c.value,0);
@@ -1385,7 +1456,7 @@
                 <div style={{ fontSize:11, letterSpacing:2, color:C.textMid, textTransform:"uppercase", marginBottom:6, fontWeight:"500" }}>Historial de pagos</div>
                 <div style={{ fontSize:18, fontWeight:"700", marginBottom:4 }}>{currentPaymentItem.name}</div>
                 <div style={{ fontSize:13, color:C.textMid, marginBottom:14 }}>
-                  Total: {usd(paymentModal.kind==="expense"?currentPaymentItem.amount:currentPaymentItem.minPay)} · Pagado: {usd(paidAmt(currentPaymentItem))}
+                  Total: {usd(paymentTargetAmt(paymentModal.kind, currentPaymentItem))} · Pagado: {usd(paidAmt(currentPaymentItem))}
                 </div>
                 {(currentPaymentItem.payments||[]).length===0 && <div style={{ fontSize:13, color:C.textDim, marginBottom:12 }}>Sin pagos registrados</div>}
                 {(currentPaymentItem.payments||[]).map(p=>(
@@ -1403,7 +1474,7 @@
                 </div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
                   <button onClick={()=>setPaymentModal(null)} style={sbtn}>Cerrar</button>
-                  <button onClick={()=>{ const rem=(paymentModal.kind==="expense"?currentPaymentItem.amount:currentPaymentItem.minPay)-paidAmt(currentPaymentItem); if(rem>0.004) addPaymentEntry(rem); }} style={btn()}>Marcar pagado</button>
+                  <button onClick={()=>{ const rem=paymentTargetAmt(paymentModal.kind, currentPaymentItem)-paidAmt(currentPaymentItem); if(rem>0.004) addPaymentEntry(rem); }} style={btn()}>Marcar pagado</button>
                 </div>
               </div>
             </div>
