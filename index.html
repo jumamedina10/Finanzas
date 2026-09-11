@@ -209,7 +209,7 @@
       const [darkMode, setDarkMode] = useState(saved?.darkMode ?? true);
       const C = darkMode ? DARK : LIGHT;
 
-      const [tab, setTab] = useState("resumen");
+      const [tab, setTab] = useState("gastos");
 
       const [accounts, setAccounts] = useState(saved?.accounts ?? INIT_ACCOUNTS);
       const [cards, setCards] = useState(saved?.cards ?? INIT_CARDS);
@@ -242,6 +242,8 @@
       const [payAmount, setPayAmount] = useState("");
       const [activeCards, setActiveCards] = useState(null);
       const [newNote, setNewNote] = useState("");
+      const [showExportModal, setShowExportModal] = useState(false);
+      const [exportScope, setExportScope] = useState({ gastos:true, tarjetasPrestamos:true, historial:true, resumenAnual:true, resumenTrimestral:true, resumenSemestral:true });
 
       const [newExp, setNewExp] = useState({ name:"", amount:"", cat:"fijo", dueDay:1, target:"current", titular:"conjunta" });
       const [newInc, setNewInc] = useState({ name:"", amount:"", date:"", titular:"juanma" });
@@ -376,6 +378,19 @@
         const { kind, id } = paymentModal;
         paymentSetFn(kind)(prev => prev.map(it => it.id===id ? { ...it, payments:(it.payments||[]).filter(p=>p.id!==payId) } : it));
       };
+      // un click: marca pagado del todo (completa lo que falte) o desmarca si ya estaba pagado
+      const togglePaid = (kind, id) => {
+        const item = paymentTargetList(kind).find(it=>it.id===id);
+        if (!item) return;
+        const targetAmt = kind==="expense" ? item.amount : item.minPay;
+        const already = isFullyPaid(item, targetAmt);
+        paymentSetFn(kind)(prev => prev.map(it => {
+          if (it.id!==id) return it;
+          if (already) return { ...it, payments:[] };
+          const rem = targetAmt - paidAmt(it);
+          return { ...it, payments:[...(it.payments||[]), { id:Date.now(), amount: rem>0.004?rem:targetAmt, date:todayLabel() }] };
+        }));
+      };
       const currentPaymentItem = paymentModal ? paymentTargetList(paymentModal.kind).find(it=>it.id===paymentModal.id) : null;
 
       // ---------- cerrar mes / export / import ----------
@@ -401,7 +416,34 @@
       const sheetOrPlaceholder = rows => rows.length ? XLSX.utils.json_to_sheet(rows) : XLSX.utils.aoa_to_sheet([["Sin datos todavía"]]);
       const titularLabel = t => (TITULARES[t] || TITULARES.conjunta).label;
 
+      // aplica formato $ y % a columnas por letra, ancho de columnas, autofiltro y fila fija (lo que sí soporta la libreria gratuita: sin colores ni graficas nativas)
+      const dressSheet = (ws, rowCount, colWidths, moneyCols, pctCols) => {
+        if (rowCount>0) {
+          const lastCol = String.fromCharCode(64+colWidths.length);
+          ws["!autofilter"] = { ref:`A1:${lastCol}${rowCount+1}` };
+          ws["!freeze"] = { xSplit:0, ySplit:1 };
+        }
+        ws["!cols"] = colWidths.map(w=>({ wch:w }));
+        (moneyCols||[]).forEach(col => {
+          for (let r=2; r<=rowCount+1; r++) {
+            const addr = col+r;
+            if (ws[addr] && typeof ws[addr].v === "number") ws[addr].z = '"$"#,##0.00';
+          }
+        });
+        (pctCols||[]).forEach(col => {
+          for (let r=2; r<=rowCount+1; r++) {
+            const addr = col+r;
+            if (ws[addr] && typeof ws[addr].v === "number") ws[addr].z = '0.0"%"';
+          }
+        });
+        return ws;
+      };
+      const catLabel = c => ({ fijo:"Fijo", suscripcion:"Suscripción", variable:"Variable", tarjeta:"Tarjeta" }[c] || c);
+      const catOrder = { fijo:0, suscripcion:1, variable:2, tarjeta:3 };
+
       const exportExcel = async () => {
+        const scope = exportScope;
+        if (!Object.values(scope).some(Boolean)) { alert("Elige al menos una pestaña para exportar."); return; }
         try {
           await loadXLSX();
         } catch {
@@ -409,32 +451,50 @@
           return;
         }
         const wb = XLSX.utils.book_new();
+        const estadoPago = e => isFullyPaid(e, e.amount) ? "✓ Pagado" : (paidAmt(e) > 0 ? `◐ Parcial (falta ${usd(e.amount-paidAmt(e))})` : "○ Pendiente");
 
-        const gastosRows = expensesResolved.filter(e=>e.cat!=="tarjeta").map(e => ({
-          Nombre: e.name, Monto: e.amount, Categoria: e.cat, Dia: e.dueDay,
-          "De quien": e.isRemittance ? "Conjunta" : titularLabel(e.titular),
-          Pagado: isFullyPaid(e, e.amount) ? "Sí" : (paidAmt(e) > 0 ? `Parcial (${usd(paidAmt(e))})` : "No"),
-          Notas: e.notes || "",
-        }));
-        XLSX.utils.book_append_sheet(wb, sheetOrPlaceholder(gastosRows), "Gastos");
+        if (scope.gastos) {
+          const gastosList = [...expensesResolved.filter(e=>e.cat!=="tarjeta")]
+            .sort((a,b) => (catOrder[a.cat]??9)-(catOrder[b.cat]??9) || a.dueDay-b.dueDay);
+          const gastosRows = gastosList.map(e => ({
+            Nombre: e.name, Monto: e.amount, Categoría: catLabel(e.cat), Día: e.dueDay,
+            "De quien": e.isRemittance ? "Conjunta" : titularLabel(e.titular),
+            Estado: estadoPago(e),
+            Notas: e.notes || "",
+          }));
+          gastosRows.push({ Nombre:"TOTAL", Monto: gastosList.reduce((a,e)=>a+e.amount,0), Categoría:"", Día:"", "De quien":"", Estado:"", Notas:"" });
+          const wsGastos = sheetOrPlaceholder(gastosRows);
+          dressSheet(wsGastos, gastosRows.length, [26,12,13,6,11,26,28], ["B"]);
+          XLSX.utils.book_append_sheet(wb, wsGastos, "Gastos");
+        }
 
-        const tarjetasRows = cards.map(c => ({
-          Nombre: c.name, Titular: titularLabel(c.titular), Balance: c.balance, Limite: c.limit,
-          "Pago minimo": c.minPay, "Dia de pago": c.dueDay, "Dia de corte": c.cutDay, "Uso %": usagePct(c.balance, c.limit),
-        }));
-        XLSX.utils.book_append_sheet(wb, sheetOrPlaceholder(tarjetasRows), "Tarjetas");
+        if (scope.tarjetasPrestamos) {
+          const tarjetasRows = [...cards].sort((a,b)=>a.dueDay-b.dueDay).map(c => ({
+            Nombre: c.name, Titular: titularLabel(c.titular), Balance: c.balance, Límite: c.limit,
+            "Pago mínimo": c.minPay, "Día de pago": c.dueDay, "Día de corte": c.cutDay, "Uso %": usagePct(c.balance, c.limit),
+          }));
+          const wsTarjetas = sheetOrPlaceholder(tarjetasRows);
+          dressSheet(wsTarjetas, tarjetasRows.length, [20,10,12,12,13,11,11,8], ["C","D","E"], ["H"]);
+          XLSX.utils.book_append_sheet(wb, wsTarjetas, "Tarjetas");
 
-        const prestamosRows = loans.map(l => ({
-          Nombre: l.name, Titular: titularLabel(l.titular), Balance: l.balance, Original: l.original,
-          Cuota: l.payment, "APR %": l.apr, "Dia de pago": l.dueDay, Notas: l.notes || "",
-        }));
-        XLSX.utils.book_append_sheet(wb, sheetOrPlaceholder(prestamosRows), "Prestamos");
+          const prestamosRows = [...loans].sort((a,b)=>a.dueDay-b.dueDay).map(l => ({
+            Nombre: l.name, Titular: titularLabel(l.titular), Balance: l.balance, Original: l.original,
+            Cuota: l.payment, "APR %": l.apr, "Día de pago": l.dueDay, Notas: l.notes || "",
+          }));
+          const wsPrestamos = sheetOrPlaceholder(prestamosRows);
+          dressSheet(wsPrestamos, prestamosRows.length, [20,10,12,12,10,8,11,28], ["C","D","E"], ["F"]);
+          XLSX.utils.book_append_sheet(wb, wsPrestamos, "Préstamos");
+        }
 
-        const histRows = history.map(h => ({
-          Mes: h.label, Ingresos: h.totalIncome, Gastos: h.totalExp, Pagado: h.totalPaid,
-          "Deuda tarjetas": h.cardDebt, "Deuda prestamos": h.loanDebt, "Patrimonio neto": h.netWorth, Nota: h.note || "",
-        }));
-        XLSX.utils.book_append_sheet(wb, sheetOrPlaceholder(histRows), "Historial");
+        if (scope.historial) {
+          const histRows = history.map(h => ({
+            Mes: h.label, Ingresos: h.totalIncome, Gastos: h.totalExp, Pagado: h.totalPaid,
+            "Deuda tarjetas": h.cardDebt, "Deuda préstamos": h.loanDebt, "Patrimonio neto": h.netWorth, Nota: h.note || "",
+          }));
+          const wsHist = sheetOrPlaceholder(histRows);
+          dressSheet(wsHist, histRows.length, [16,12,12,12,14,14,14,28], ["B","C","D","E","F","G"]);
+          XLSX.utils.book_append_sheet(wb, wsHist, "Historial");
+        }
 
         const histSorted = [...history].map(h => {
           const parts = h.label.split(" ");
@@ -454,11 +514,18 @@
           return order.map(k => map[k]);
         };
 
-        XLSX.utils.book_append_sheet(wb, sheetOrPlaceholder(buildPeriodRows(h => String(h.year))), "Resumen anual");
-        XLSX.utils.book_append_sheet(wb, sheetOrPlaceholder(buildPeriodRows(h => `T${Math.floor(h.monthIdx/3)+1} ${h.year}`)), "Resumen trimestral");
-        XLSX.utils.book_append_sheet(wb, sheetOrPlaceholder(buildPeriodRows(h => `S${h.monthIdx<6?1:2} ${h.year}`)), "Resumen semestral");
+        const addPeriodSheet = (keyFn, name) => {
+          const rows = buildPeriodRows(keyFn);
+          const ws = sheetOrPlaceholder(rows);
+          dressSheet(ws, rows.length, [14,8,13,13,13,20], ["C","D","E","F"]);
+          XLSX.utils.book_append_sheet(wb, ws, name);
+        };
+        if (scope.resumenAnual) addPeriodSheet(h => String(h.year), "Resumen anual");
+        if (scope.resumenTrimestral) addPeriodSheet(h => `T${Math.floor(h.monthIdx/3)+1} ${h.year}`, "Resumen trimestral");
+        if (scope.resumenSemestral) addPeriodSheet(h => `S${h.monthIdx<6?1:2} ${h.year}`, "Resumen semestral");
 
         XLSX.writeFile(wb, `nosotros-${currentMonth.replace(" ","-")}.xlsx`);
+        setShowExportModal(false);
       };
       const importData = () => {
         try {
@@ -499,13 +566,20 @@
         return (
           <div key={e.id} style={{ padding:"12px 0", borderBottom:`1px solid ${C.border}`, opacity:full?0.45:1 }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
-              <div style={{ display:"flex", alignItems:"center", gap:10, flex:1, minWidth:0 }}>
-                <button onClick={()=>openPayment("expense", e.id)} style={{
+              <div style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:0 }}>
+                <button onClick={()=>togglePaid("expense", e.id)} title={full?"Desmarcar":"Marcar como pagado"} style={{
                   width:22, height:22, borderRadius:7, flexShrink:0, cursor:"pointer",
                   display:"flex", alignItems:"center", justifyContent:"center",
                   border: full?"none":partial?`2px solid ${C.warning}`:`2px solid ${C.primary}`,
                   background: full?C.primary:partial?C.warning+"22":"transparent",
                 }}>{full && <span style={{ color:"#fff", fontSize:11, fontWeight:"700" }}>✓</span>}{partial && <span style={{ color:C.warning, fontSize:11, fontWeight:"700" }}>~</span>}</button>
+                {!full && (
+                  <button onClick={()=>openPayment("expense", e.id)} title="Abonar (pago parcial)" style={{
+                    width:16, height:16, borderRadius:5, flexShrink:0, cursor:"pointer",
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    border:`1px solid ${C.textDim}`, background:"none", color:C.textDim, fontSize:10, lineHeight:1, padding:0,
+                  }}>+</button>
+                )}
                 <div style={{ minWidth:0 }}>
                   <div style={{ fontSize:15, fontWeight:"500", color:C.text, textDecoration:full?"line-through":"none" }}>
                     {e.isRemittance ? e.name : <Editable value={e.name} onSave={v=>updField(setExpenses,e.id,"name",v)} type="text" color={C.text} C={C} width={150} />}
@@ -513,8 +587,13 @@
                   <div style={{ fontSize:12, color:C.textMid, marginTop:2 }}>
                     Dia <Editable value={e.dueDay} onSave={v=>updField(setExpenses,e.id,"dueDay",Math.max(1,Math.min(31,Math.round(v))))} color={C.textMid} C={C} />
                     {e.notes?` · ${e.notes}`:""}
-                    {partial ? ` · abonado ${usd(abonado)}` : ""}
+                    {partial ? ` · ${usd(abonado)} de ${usd(e.amount)} (falta ${usd(e.amount-abonado)})` : ""}
                   </div>
+                  {partial && (
+                    <div style={{ marginTop:5, height:5, borderRadius:3, background:C.border, overflow:"hidden", maxWidth:220 }}>
+                      <div style={{ height:"100%", width:`${Math.max(2,Math.min(100,(abonado/e.amount)*100))}%`, background:C.warning, borderRadius:3 }} />
+                    </div>
+                  )}
                 </div>
               </div>
               <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
@@ -534,7 +613,7 @@
         const total = sumRemit(key);
         const isCOP = key==="colombia";
         return (
-          <div key={key} id={`remit-${key}`} style={{ ...card, marginBottom:16, borderTop:`3px solid ${color}` }}>
+          <div key={key} style={{ ...card, marginBottom:16, borderTop:`3px solid ${color}` }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:isCOP?4:10 }}>
               <span style={{ ...lbl, marginBottom:0 }}>Responsabilidades · {label}</span>
               <span style={{ fontSize:14, fontWeight:"700", color:color }}>{usd(total)}</span>
@@ -609,7 +688,7 @@
 
           {/* TABS */}
           <div className="fm-tabs" style={{ background:C.bgCard, borderBottom:`1px solid ${C.border}` }}>
-            {[["resumen","Resumen"],["gastos","Gastos"],["ingresos","Ingresos"],["salidas","Salidas"],["deudas","Deudas"],["graficas","Graficas"],["historial","Historial"]].map(([k,l]) => (
+            {[["gastos","Gastos"],["ingresos","Ingresos"],["salidas","Salidas"],["deudas","Deudas"],["graficas","Graficas"],["resumen","Resumen"],["historial","Historial"]].map(([k,l]) => (
               <button key={k} className={`fm-tab ${tab===k?"active":""}`} onClick={()=>setTab(k)} style={{
                 flex:1, minWidth:70, padding:"13px 0", background:"none", border:"none", fontSize:10.5, letterSpacing:1, textTransform:"uppercase",
                 fontFamily:C.font, fontWeight:tab===k?"700":"400", color:tab===k?C.primary:C.textMid,
@@ -742,15 +821,6 @@
                   ))}
                 </div>
 
-                <div style={{ display:"flex", gap:8, marginTop:10, marginBottom:6 }}>
-                  {[["colombia","Colombia","#6366f1"],["venezuela","Venezuela","#ec4899"]].map(([k,label,color])=>(
-                    <button key={k} type="button" onClick={()=>document.getElementById(`remit-${k}`)?.scrollIntoView({behavior:"smooth", block:"center"})} style={{ flex:1, display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 12px", borderRadius:10, border:`1px solid ${color}55`, background:color+"14", cursor:"pointer", fontFamily:C.font }}>
-                      <span style={{ fontSize:12, color:color, fontWeight:"600" }}>{label}</span>
-                      <span style={{ fontSize:13, color:color, fontWeight:"700" }}>{usd(sumRemit(k))}</span>
-                    </button>
-                  ))}
-                </div>
-
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, marginTop:16 }}>
                   <span style={lbl}>Gastos fijos y suscripciones</span>
                   <button style={btn()} onClick={()=>{ const next=!showAddExp; setShowAddExp(next); if (next) setNewExp(p=>({...p, titular: gastosFiltro==="todos"?"conjunta":gastosFiltro})); }}>+ Agregar</button>
@@ -788,7 +858,12 @@
                 )}
 
                 {expensesResolved.filter(e=>e.cat!=="tarjeta" && e.cat!=="variable")
-                  .filter(e=>gastosFiltro==="todos" || e.isRemittance || e.titular===gastosFiltro)
+                  .filter(e=>{
+                    if (gastosFiltro==="todos") return true;
+                    if (e.isRemittance==="colombia") return gastosFiltro==="juanma";
+                    if (e.isRemittance==="venezuela") return gastosFiltro==="mari";
+                    return e.titular===gastosFiltro;
+                  })
                   .sort((a,b)=>a.dueDay-b.dueDay).map(ExpenseRow)}
 
                 <div style={{ ...lbl, marginTop:20 }}>Variables</div>
@@ -800,8 +875,8 @@
                 })()}
 
                 <div style={{ marginTop:24 }}>
-                  {RemitPanel("colombia","Colombia","#6366f1")}
-                  {RemitPanel("venezuela","Venezuela","#ec4899")}
+                  {(gastosFiltro==="todos" || gastosFiltro==="juanma") && RemitPanel("colombia","Colombia","#6366f1")}
+                  {(gastosFiltro==="todos" || gastosFiltro==="mari") && RemitPanel("venezuela","Venezuela","#ec4899")}
                 </div>
 
                 <div style={{ marginTop:8, marginBottom:10 }}>
@@ -814,11 +889,24 @@
                     return (
                       <div key={c.id} style={{ padding:"12px 0", borderBottom:`1px solid ${C.border}`, opacity:full?0.45:1 }}>
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                          <div style={{ display:"flex", alignItems:"center", gap:10, flex:1, minWidth:0 }}>
-                            <button onClick={()=>openPayment("card",c.id)} style={{ width:22, height:22, borderRadius:7, flexShrink:0, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", border:full?"none":partial?`2px solid ${C.warning}`:`2px solid ${c.color}`, background:full?c.color:partial?C.warning+"22":"transparent" }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:0 }}>
+                            <button onClick={()=>togglePaid("card",c.id)} title={full?"Desmarcar":"Marcar como pagado"} style={{ width:22, height:22, borderRadius:7, flexShrink:0, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", border:full?"none":partial?`2px solid ${C.warning}`:`2px solid ${c.color}`, background:full?c.color:partial?C.warning+"22":"transparent" }}>
                               {full && <span style={{ color:"#fff", fontSize:11, fontWeight:"700" }}>✓</span>}{partial && <span style={{ color:C.warning, fontSize:11 }}>~</span>}
                             </button>
-                            <div style={{ fontSize:15, fontWeight:"500", color:C.text }}>{c.name}</div>
+                            {!full && (
+                              <button onClick={()=>openPayment("card",c.id)} title="Abonar (pago parcial)" style={{ width:16, height:16, borderRadius:5, flexShrink:0, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", border:`1px solid ${C.textDim}`, background:"none", color:C.textDim, fontSize:10, lineHeight:1, padding:0 }}>+</button>
+                            )}
+                            <div style={{ minWidth:0 }}>
+                              <div style={{ fontSize:15, fontWeight:"500", color:C.text }}>{c.name}</div>
+                              {partial && (
+                                <>
+                                  <div style={{ fontSize:11, color:C.textDim, marginTop:2 }}>{usd(abonado)} de {usd(c.minPay)} (falta {usd(c.minPay-abonado)})</div>
+                                  <div style={{ marginTop:4, height:5, borderRadius:3, background:C.border, overflow:"hidden", maxWidth:180 }}>
+                                    <div style={{ height:"100%", width:`${Math.max(2,Math.min(100,(abonado/c.minPay)*100))}%`, background:C.warning, borderRadius:3 }} />
+                                  </div>
+                                </>
+                              )}
+                            </div>
                           </div>
                           <div style={{ fontSize:15, fontWeight:"600", color:partial?C.warning:c.color }}>{usd(c.minPay)} <span style={{ fontSize:11, color:C.textDim }}>min</span></div>
                         </div>
@@ -1247,7 +1335,7 @@
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                     <button onClick={()=>setShowImport(true)} style={sbtn}>Importar</button>
                     <button onClick={exportData} style={gbtn}>Exportar JSON</button>
-                    <button onClick={exportExcel} style={gbtn}>Exportar Excel</button>
+                    <button onClick={()=>setShowExportModal(true)} style={gbtn}>Exportar Excel</button>
                     <button onClick={()=>setShowPlanner(!showPlanner)} style={gbtn}>Planear</button>
                     <button onClick={()=>setConfirmClose(true)} style={btn()}>Cerrar mes</button>
                   </div>
@@ -1348,6 +1436,37 @@
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
                   <button onClick={()=>{setShowImport(false);setImportText("");setImportError("");}} style={sbtn}>Cancelar</button>
                   <button onClick={importData} style={btn()}>Importar</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL exportar excel */}
+          {showExportModal && (
+            <div style={modal}>
+              <div style={{ ...mbox, maxWidth:380 }}>
+                <div style={{ fontSize:11, letterSpacing:2, color:C.textMid, textTransform:"uppercase", marginBottom:8, fontWeight:"500" }}>Exportar Excel</div>
+                <div style={{ fontSize:16, fontWeight:"700", marginBottom:14 }}>Que pestañas quieres incluir?</div>
+                {[
+                  ["gastos","Gastos del mes actual"],
+                  ["tarjetasPrestamos","Tarjetas y prestamos"],
+                  ["historial","Meses cerrados (historial)"],
+                  ["resumenAnual","Resumen anual"],
+                  ["resumenTrimestral","Resumen trimestral"],
+                  ["resumenSemestral","Resumen semestral"],
+                ].map(([k,label]) => (
+                  <label key={k} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", cursor:"pointer", borderBottom:`1px solid ${C.border}` }}>
+                    <input type="checkbox" checked={exportScope[k]} onChange={e=>setExportScope(p=>({...p,[k]:e.target.checked}))} style={{ width:16, height:16, cursor:"pointer" }} />
+                    <span style={{ fontSize:14, color:C.text }}>{label}</span>
+                  </label>
+                ))}
+                <div style={{ display:"flex", gap:8, marginTop:14, marginBottom:14 }}>
+                  <button type="button" onClick={()=>setExportScope({ gastos:true, tarjetasPrestamos:true, historial:true, resumenAnual:true, resumenTrimestral:true, resumenSemestral:true })} style={{ ...sbtn, flex:1, fontSize:12, padding:"7px 10px" }}>Todo</button>
+                  <button type="button" onClick={()=>setExportScope({ gastos:false, tarjetasPrestamos:false, historial:false, resumenAnual:false, resumenTrimestral:false, resumenSemestral:false })} style={{ ...sbtn, flex:1, fontSize:12, padding:"7px 10px" }}>Ninguno</button>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                  <button onClick={()=>setShowExportModal(false)} style={sbtn}>Cancelar</button>
+                  <button onClick={exportExcel} style={btn()}>Exportar</button>
                 </div>
               </div>
             </div>
