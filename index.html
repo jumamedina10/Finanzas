@@ -237,6 +237,7 @@
       const [showAddInc, setShowAddInc] = useState(false);
       const [showAddCard, setShowAddCard] = useState(false);
       const [showAddLoan, setShowAddLoan] = useState(false);
+      const [showAddAccount, setShowAddAccount] = useState(false);
       const [showAddSalida, setShowAddSalida] = useState(false);
       const [showPlanner, setShowPlanner] = useState(false);
       const [showNotes, setShowNotes] = useState(false);
@@ -256,6 +257,7 @@
       const [newInc, setNewInc] = useState({ name:"", amount:"", date:"", titular:"juanma" });
       const [newCard, setNewCard] = useState({ name:"", limit:"", balance:"", minPay:"", dueDay:1, cutDay:0, titular:"juanma" });
       const [newLoan, setNewLoan] = useState({ name:"", original:"", balance:"", payment:"", apr:"", dueDay:1, titular:"juanma", notes:"" });
+      const [newAccount, setNewAccount] = useState({ name:"", type:"checking", balance:"", titular:"juanma" });
       const [newSalida, setNewSalida] = useState({ lugar:"", amount:"", method:"debit", notes:"" });
       const [newPlanItem, setNewPlanItem] = useState({ name:"", amount:"", cat:"fijo", dueDay:1 });
       const [newRemit, setNewRemit] = useState({ colombia:{name:"",amount:""}, venezuela:{name:"",amount:""} });
@@ -341,6 +343,12 @@
           dueDay:parseInt(newLoan.dueDay)||1, notes:newLoan.notes }]);
         setNewLoan({ name:"", original:"", balance:"", payment:"", apr:"", dueDay:1, titular:"juanma", notes:"" });
         setShowAddLoan(false);
+      };
+      const addAccount = () => {
+        if (!newAccount.name) return;
+        setAccounts(p=>[...p, { id:"acc_"+Date.now(), titular:newAccount.titular, name:newAccount.name, type:newAccount.type, balance:parseFloat(newAccount.balance)||0 }]);
+        setNewAccount({ name:"", type:"checking", balance:"", titular:"juanma" });
+        setShowAddAccount(false);
       };
       const addSalida = () => {
         if (!newSalida.lugar || !newSalida.amount) return;
@@ -699,6 +707,19 @@
         );
       };
 
+      const renderAccountRow = a => (
+        <div key={a.id} style={{ padding:"12px 0", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
+            <TitularSelect titular={a.titular} onChange={v=>setTitular(setAccounts,a.id,v)} C={C} />
+            <Editable value={a.name} onSave={v=>updField(setAccounts,a.id,"name",v)} type="text" color={C.text} C={C} width={140} />
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
+            <div style={{ fontSize:16, fontWeight:"600", color:C.primary }}>$<Editable value={a.balance} onSave={v=>updField(setAccounts,a.id,"balance",v)} C={C} /></div>
+            <button onClick={()=>delFrom(setAccounts,a.id)} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", fontSize:20 }}>×</button>
+          </div>
+        </div>
+      );
+
       return (
         <div data-theme={darkMode?"dark":"light"} className="fm-shell" style={{ fontFamily:C.font, background:C.bg, minHeight:"100vh", color:C.text, maxWidth:480, margin:"0 auto", paddingBottom:60 }}>
 
@@ -738,7 +759,7 @@
 
           {/* TABS */}
           <div className="fm-tabs" style={{ background:C.bgCard, borderBottom:`1px solid ${C.border}` }}>
-            {[["gastos","Gastos"],["ingresos","Ingresos"],["salidas","Salidas"],["deudas","Deudas"],["graficas","Graficas"],["resumen","Resumen"],["historial","Historial"]].map(([k,l]) => (
+            {[["gastos","Gastos"],["ingresos","Ingresos"],["salidas","Salidas"],["cuentas","Cuentas"],["deudas","Deudas"],["graficas","Graficas"],["resumen","Resumen"],["historial","Historial"]].map(([k,l]) => (
               <button key={k} className={`fm-tab ${tab===k?"active":""}`} onClick={()=>setTab(k)} style={{
                 flex:1, minWidth:70, padding:"13px 0", background:"none", border:"none", fontSize:10.5, letterSpacing:1, textTransform:"uppercase",
                 fontFamily:C.font, fontWeight:tab===k?"700":"400", color:tab===k?C.primary:C.textMid,
@@ -1096,6 +1117,57 @@
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* CUENTAS */}
+            {tab==="cuentas" && (
+              <div style={{ marginTop:20 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+                  <span style={lbl}>Cuentas</span>
+                  <button style={gbtn} onClick={()=>setShowAddAccount(!showAddAccount)}>+ Cuenta</button>
+                </div>
+                {showAddAccount && (
+                  <div style={{ ...card, marginBottom:16, borderColor:C.primary }}>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
+                      <input placeholder="Nombre (ej. Chase Checking)" value={newAccount.name} onChange={e=>setNewAccount(p=>({...p,name:e.target.value}))} style={inp} />
+                      <input placeholder="Balance $" type="number" value={newAccount.balance} onChange={e=>setNewAccount(p=>({...p,balance:e.target.value}))} style={inp} />
+                    </div>
+                    <div style={{ marginBottom:10 }}>
+                      <div style={{ fontSize:11, color:C.textMid, marginBottom:6 }}>Tipo de cuenta</div>
+                      <div style={{ display:"flex", gap:8 }}>
+                        {[["checking","Checking"],["savings","Savings"]].map(([k,label])=>(
+                          <button key={k} type="button" onClick={()=>setNewAccount(p=>({...p,type:k}))} style={{ flex:1, padding:"9px", borderRadius:10, border:`1.5px solid ${newAccount.type===k?C.primary:C.borderMid}`, background:newAccount.type===k?C.primary+"22":"none", color:newAccount.type===k?C.primary:C.textMid, cursor:"pointer", fontSize:13, fontFamily:C.font, fontWeight:"500" }}>{label}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ marginBottom:10 }}>
+                      <div style={{ fontSize:11, color:C.textMid, marginBottom:6 }}>A nombre de (solo referencia)</div>
+                      <div style={{ display:"flex", gap:8 }}>
+                        {Object.keys(TITULARES).map(k=>(
+                          <button key={k} type="button" onClick={()=>setNewAccount(p=>({...p,titular:k}))} style={{ flex:1, padding:"8px 6px", borderRadius:10, cursor:"pointer", fontFamily:C.font, fontSize:12, fontWeight:"600", border:`1.5px solid ${newAccount.titular===k?TITULARES[k].color:C.borderMid}`, background:newAccount.titular===k?TITULARES[k].color+"22":"none", color:newAccount.titular===k?TITULARES[k].color:C.textMid }}>{TITULARES[k].label}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <button onClick={addAccount} style={{...btn(),width:"100%",padding:"12px"}}>Guardar</button>
+                  </div>
+                )}
+
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, marginTop:8 }}>
+                  <span style={lbl}>Checking</span>
+                  <span style={{ fontSize:14, color:C.primary, fontWeight:"600" }}>{usd(checkingTotal)}</span>
+                </div>
+                {accounts.filter(a=>a.type==="checking").length===0
+                  ? <div style={{ fontSize:13, color:C.textDim, padding:"10px 0" }}>Sin cuentas de checking</div>
+                  : accounts.filter(a=>a.type==="checking").map(renderAccountRow)}
+
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, marginTop:24 }}>
+                  <span style={lbl}>Savings</span>
+                  <span style={{ fontSize:14, color:C.primary, fontWeight:"600" }}>{usd(savingsTotal)}</span>
+                </div>
+                {accounts.filter(a=>a.type==="savings").length===0
+                  ? <div style={{ fontSize:13, color:C.textDim, padding:"10px 0" }}>Sin cuentas de savings</div>
+                  : accounts.filter(a=>a.type==="savings").map(renderAccountRow)}
               </div>
             )}
 
