@@ -534,7 +534,7 @@
         const total = sumRemit(key);
         const isCOP = key==="colombia";
         return (
-          <div key={key} style={{ ...card, marginBottom:16, borderTop:`3px solid ${color}` }}>
+          <div key={key} id={`remit-${key}`} style={{ ...card, marginBottom:16, borderTop:`3px solid ${color}` }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:isCOP?4:10 }}>
               <span style={{ ...lbl, marginBottom:0 }}>Responsabilidades · {label}</span>
               <span style={{ fontSize:14, fontWeight:"700", color:color }}>{usd(total)}</span>
@@ -666,6 +666,41 @@
                 </div>
 
                 <div style={{ ...card, marginBottom:16 }}>
+                  <div style={{ ...lbl, marginBottom:14 }}>Deuda vs Activos</div>
+                  {(()=>{
+                    const data = [
+                      { label:"Activos",   color:C.positive, value:assetsTotal },
+                      { label:"Tarjetas",  color:"#6366f1",  value:cardDebtTotal },
+                      { label:"Prestamos", color:"#8b5cf6",  value:loanDebtTotal },
+                    ];
+                    const total = data.reduce((a,c)=>a+c.value,0);
+                    if (total===0) return <div style={{ fontSize:13, color:C.textDim, textAlign:"center", padding:"20px 0" }}>Sin datos aún</div>;
+                    return (
+                      <div style={{ display:"flex", alignItems:"center", gap:20, flexWrap:"wrap" }}>
+                        <div style={{ position:"relative", flexShrink:0 }}>
+                          <DonutChart data={data} size={160} thickness={32} />
+                          <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+                            <div style={{ fontSize:10, color:netWorth>=0?C.positive:C.negative, letterSpacing:1, textTransform:"uppercase", fontWeight:"600" }}>{netWorth>=0?"Positivo":"Negativo"}</div>
+                            <div style={{ fontSize:14, fontWeight:"700", color:netWorth>=0?C.positive:C.negative }}>{usd(netWorth)}</div>
+                          </div>
+                        </div>
+                        <div style={{ flex:1, minWidth:160 }}>
+                          {data.map((c,i)=>(
+                            <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                              <div style={{ display:"flex", alignItems:"center", gap:8 }}><div style={{ width:8, height:8, borderRadius:"50%", background:c.color }} /><span style={{ fontSize:13, color:C.text }}>{c.label}</span></div>
+                              <div style={{ textAlign:"right" }}>
+                                <div style={{ fontSize:13, fontWeight:"700", color:c.color }}>{usd(c.value)}</div>
+                                <div style={{ fontSize:10, color:C.textDim }}>{total>0?((c.value/total)*100).toFixed(0):0}%</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                <div style={{ ...card, marginBottom:16 }}>
                   <div style={{ ...lbl, marginBottom:12 }}>Gastos del mes por categoría</div>
                   {[
                     { l:"Fijos", v:fijoTotal },
@@ -706,6 +741,16 @@
                     <button key={k} onClick={()=>setGastosFiltro(k)} style={{ flex:1, padding:"9px 6px", borderRadius:10, cursor:"pointer", fontFamily:C.font, fontSize:13, fontWeight:"600", border:`1.5px solid ${gastosFiltro===k?color:C.borderMid}`, background:gastosFiltro===k?color+"22":"none", color:gastosFiltro===k?color:C.textMid }}>{label}</button>
                   ))}
                 </div>
+
+                <div style={{ display:"flex", gap:8, marginTop:10, marginBottom:6 }}>
+                  {[["colombia","Colombia","#6366f1"],["venezuela","Venezuela","#ec4899"]].map(([k,label,color])=>(
+                    <button key={k} type="button" onClick={()=>document.getElementById(`remit-${k}`)?.scrollIntoView({behavior:"smooth", block:"center"})} style={{ flex:1, display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 12px", borderRadius:10, border:`1px solid ${color}55`, background:color+"14", cursor:"pointer", fontFamily:C.font }}>
+                      <span style={{ fontSize:12, color:color, fontWeight:"600" }}>{label}</span>
+                      <span style={{ fontSize:13, color:color, fontWeight:"700" }}>{usd(sumRemit(k))}</span>
+                    </button>
+                  ))}
+                </div>
+
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, marginTop:16 }}>
                   <span style={lbl}>Gastos fijos y suscripciones</span>
                   <button style={btn()} onClick={()=>{ const next=!showAddExp; setShowAddExp(next); if (next) setNewExp(p=>({...p, titular: gastosFiltro==="todos"?"conjunta":gastosFiltro})); }}>+ Agregar</button>
