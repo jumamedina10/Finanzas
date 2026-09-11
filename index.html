@@ -623,11 +623,36 @@
             {/* RESUMEN */}
             {tab==="resumen" && (
               <div style={{ marginTop:20 }}>
-                <div style={{ ...card, marginBottom:16, textAlign:"center", padding:"22px 16px" }}>
-                  <div style={lbl}>Patrimonio neto</div>
-                  <div style={{ fontSize:36, fontWeight:"700", color:netWorth>=0?C.positive:C.negative }}>{usd(netWorth)}</div>
-                  <div style={{ fontSize:12, color:C.textDim, marginTop:4 }}>{cop(netWorth, copRate)}</div>
-                </div>
+                {(() => {
+                  const prev = history[0]; // history queda mas reciente primero
+                  const delta = prev ? netWorth - prev.netWorth : null;
+                  let streak = netWorth < 0 ? 1 : 0;
+                  if (streak > 0) for (const h of history) { if (h.netWorth < 0) streak++; else break; }
+                  const pts = [...history].reverse().map(h => ({ v:h.netWorth, label:h.label.split(" ")[0].slice(0,3) }));
+                  pts.push({ v:netWorth, label:"Hoy" });
+                  return (
+                    <div style={{ ...card, marginBottom:16, textAlign:"center", padding:"22px 16px" }}>
+                      <div style={lbl}>Patrimonio neto</div>
+                      <div style={{ fontSize:36, fontWeight:"700", color:netWorth>=0?C.positive:C.negative }}>{usd(netWorth)}</div>
+                      <div style={{ fontSize:12, color:C.textDim, marginTop:4 }}>{cop(netWorth, copRate)}</div>
+                      {delta!==null && (
+                        <div style={{ fontSize:13, fontWeight:"600", marginTop:8, color:delta>=0?C.positive:C.negative }}>
+                          {delta>=0?"↑ ":"↓ "}{delta>=0?"+":""}{usd(delta)} vs mes pasado
+                        </div>
+                      )}
+                      {streak>=2 && (
+                        <div style={{ fontSize:12, color:C.negative, marginTop:6, fontWeight:"600" }}>
+                          {streak} meses seguidos en negativo
+                        </div>
+                      )}
+                      {pts.length>=2 && (
+                        <div style={{ marginTop:14 }}>
+                          <LineChart points={pts} color={netWorth>=0?C.positive:C.negative} C={C} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 <div className="fm-grid2" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
                   <div style={card}>
