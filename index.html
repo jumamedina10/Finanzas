@@ -436,9 +436,26 @@
       };
 
       const exportData = () => {
-        const blob = new Blob([JSON.stringify({ darkMode, accounts, cards, loans, expenses, income, remittances, salidas, salidaBudget, history, appNotes, plannerItems, currentMonth })], { type:"application/json" });
+        const json = JSON.stringify({ darkMode, accounts, cards, loans, expenses, income, remittances, salidas, salidaBudget, history, appNotes, plannerItems, currentMonth });
+        // BOM ("﻿") al inicio + charset explícito: ayuda a que apps de correo/mensajería/editores
+        // de texto detecten UTF-8 correctamente al abrir el archivo (si no, algunas lo asumen Latin-1
+        // y las tildes/ñ se ven como "Ã³", "Ã±", etc. — de ahí el bug reportado entre iPhone y Mari).
+        const blob = new Blob(["﻿" + json], { type:"application/json;charset=utf-8" });
         const url = URL.createObjectURL(blob), a = document.createElement("a");
         a.href = url; a.download = `nosotros-${currentMonth.replace(" ","-")}.json`; a.click(); URL.revokeObjectURL(url);
+      };
+      const importFromFile = e => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          let text = String(ev.target.result || "");
+          if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // quita BOM si vino
+          setImportText(text); setImportError("");
+        };
+        reader.onerror = () => setImportError("No se pudo leer el archivo.");
+        reader.readAsText(file, "utf-8");
+        e.target.value = "";
       };
 
       const sheetOrPlaceholder = rows => rows.length ? XLSX.utils.json_to_sheet(rows) : XLSX.utils.aoa_to_sheet([["Sin datos todavía"]]);
@@ -557,7 +574,9 @@
       };
       const importData = () => {
         try {
-          const data = JSON.parse(importText);
+          let cleanText = importText.trim();
+          if (cleanText.charCodeAt(0) === 0xFEFF) cleanText = cleanText.slice(1); // quita BOM si vino pegado
+          const data = JSON.parse(cleanText);
           if (!data.expenses || !data.cards) throw new Error();
           if (data.darkMode!==undefined) setDarkMode(data.darkMode);
           if (data.accounts) setAccounts(data.accounts);
@@ -1578,7 +1597,13 @@
             <div style={modal}>
               <div style={{ ...mbox, maxWidth:380 }}>
                 <div style={{ fontSize:11, letterSpacing:2, color:C.textMid, textTransform:"uppercase", marginBottom:8, fontWeight:"500" }}>Importar datos</div>
-                <div style={{ fontSize:16, fontWeight:"700", marginBottom:6 }}>Pega el contenido del archivo</div>
+                <div style={{ fontSize:16, fontWeight:"700", marginBottom:6 }}>Elige el archivo .json</div>
+                <div style={{ fontSize:13, color:C.textMid, marginBottom:12 }}>Recomendado: evita que se dañen las tildes/ñ al copiar y pegar.</div>
+                <label style={{ ...btn(), display:"block", textAlign:"center", marginBottom:16, cursor:"pointer" }}>
+                  📂 Elegir archivo
+                  <input type="file" accept="application/json,.json" onChange={importFromFile} style={{ display:"none" }} />
+                </label>
+                <div style={{ fontSize:12, color:C.textMid, marginBottom:6 }}>o pega el contenido a mano:</div>
                 <textarea value={importText} onChange={e=>{setImportText(e.target.value);setImportError("");}} placeholder='{"expenses":[...],...}' rows={5} style={{ ...inp, fontFamily:"monospace", fontSize:12, marginBottom:importError?8:16, resize:"none" }} />
                 {importError && <div style={{ fontSize:13, color:C.negative, marginBottom:14 }}>{importError}</div>}
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
