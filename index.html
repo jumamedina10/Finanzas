@@ -8,6 +8,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <style>
+    :root { --max-width: 480px; }
+    @media (min-width: 768px) { :root { --max-width: 720px; } }
+    @media (min-width: 1024px) { :root { --max-width: 960px; } }
+    .fm-app { max-width: var(--max-width) !important; }
+    .fm-grid-desktop { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 768px) { .fm-grid-desktop { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 1024px) { .fm-grid-desktop { grid-template-columns: 1fr 1fr 1fr; } }
+    .fm-tab { transition: background 0.15s, color 0.15s; }
+    .fm-tab:hover:not(.active) { background: rgba(99,102,241,0.08) !important; color: var(--primary-clr, #6366f1) !important; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
@@ -270,11 +279,17 @@
       const [newSalida, setNewSalida] = useState({ lugar:"", amount:"", method:"debit", notes:"" });
       const [newPlanItem, setNewPlanItem] = useState({ name:"", amount:"", cat:"fijo", dueDay:1 });
       const [newRemit, setNewRemit] = useState({ colombia:{name:"",amount:""}, venezuela:{name:"",amount:""} });
+      const [soloP, setSoloP] = useState(false); // solo pendientes en Gastos
+      const [bolsillos, setBolsillos] = useState(saved?.bolsillos ?? []);
+      const [newBolsillo, setNewBolsillo] = useState({ name:"", goal:"", color:"#6366f1" });
+      const [showAddBolsillo, setShowAddBolsillo] = useState(false);
+      const [ahorroDeposit, setAhorroDeposit] = useState({}); // id -> amount string being typed
 
       useEffect(() => {
         document.body.style.background = C.bg;
-        persist({ darkMode, accounts, cards, loans, expenses, income, remittances, copRate, salidas, salidaBudget, history, appNotes, plannerItems, currentMonth });
-      }, [darkMode, accounts, cards, loans, expenses, income, remittances, copRate, salidas, salidaBudget, history, appNotes, plannerItems, currentMonth]);
+      document.documentElement.style.setProperty('--primary-clr', C.primary);
+        persist({ darkMode, accounts, cards, loans, expenses, income, remittances, copRate, salidas, salidaBudget, history, appNotes, plannerItems, currentMonth, bolsillos });
+      }, [darkMode, accounts, cards, loans, expenses, income, remittances, copRate, salidas, salidaBudget, history, appNotes, plannerItems, currentMonth, bolsillos]);
 
       // ---------- resueltos / totales (los totales siempre suman todo, sin importar titular) ----------
       // Colombia se guarda en COP (amountCOP) y se convierte a USD con la tasa vigente (copRate) al sumar.
@@ -308,7 +323,7 @@
       const fijoTotal = expensesResolved.filter(e=>e.cat==="fijo").reduce((a,e)=>a+e.amount,0);
       const subsTotal = expensesResolved.filter(e=>e.cat==="suscripcion").reduce((a,e)=>a+e.amount,0);
 
-      const totalExp = fixedTotal + varTotal + cardExpTotal + loanPaymentTotal + salidaBudget;
+      const totalExp = fixedTotal + varTotal + cardExpTotal + loanPaymentTotal; // salidas NO cuenta como obligación
       const totalPaid = fixedPaid + varPaid + cardExpPaid + loanPaymentPaid;
       const totalPend = totalExp - totalPaid;
       const totalIncome = income.reduce((a,i)=>a+i.amount,0);
@@ -436,7 +451,7 @@
       };
 
       const exportData = () => {
-        const json = JSON.stringify({ darkMode, accounts, cards, loans, expenses, income, remittances, salidas, salidaBudget, history, appNotes, plannerItems, currentMonth });
+        const json = JSON.stringify({ darkMode, accounts, cards, loans, expenses, income, remittances, salidas, salidaBudget, history, appNotes, plannerItems, currentMonth, bolsillos });
         // BOM ("﻿") al inicio + charset explícito: ayuda a que apps de correo/mensajería/editores
         // de texto detecten UTF-8 correctamente al abrir el archivo (si no, algunas lo asumen Latin-1
         // y las tildes/ñ se ven como "Ã³", "Ã±", etc. — de ahí el bug reportado entre iPhone y Mari).
@@ -587,6 +602,7 @@
           if (data.remittances) setRemittances(data.remittances);
           if (data.copRate!==undefined) setCopRate(data.copRate);
           if (data.salidas) setSalidas(data.salidas);
+          if (data.bolsillos) setBolsillos(data.bolsillos);
           if (data.salidaBudget!==undefined) setSalidaBudget(data.salidaBudget);
           if (data.history) setHistory(data.history);
           if (data.appNotes) setAppNotes(data.appNotes);
@@ -745,7 +761,7 @@
       );
 
       return (
-        <div data-theme={darkMode?"dark":"light"} className="fm-shell" style={{ fontFamily:C.font, background:C.bg, minHeight:"100vh", color:C.text, maxWidth:480, margin:"0 auto", paddingBottom:60 }}>
+        <div data-theme={darkMode?"dark":"light"} className="fm-shell fm-app" style={{ fontFamily:C.font, background:C.bg, minHeight:"100vh", color:C.text, maxWidth:480, margin:"0 auto", paddingBottom:60 }}>
 
           {/* HEADER */}
           <div style={{ background:C.bgCard, borderBottom:`1px solid ${C.border}`, padding:"18px 18px 14px" }}>
@@ -783,7 +799,7 @@
 
           {/* TABS */}
           <div className="fm-tabs" style={{ background:C.bgCard, borderBottom:`1px solid ${C.border}` }}>
-            {[["gastos","Gastos"],["ingresos","Ingresos"],["salidas","Salidas"],["cuentas","Cuentas"],["deudas","Deudas"],["graficas","Graficas"],["resumen","Resumen"],["historial","Historial"]].map(([k,l]) => (
+            {[["gastos","Gastos"],["ingresos","Ingresos"],["salidas","Salidas"],["ahorro","Ahorro"],["cuentas","Cuentas"],["deudas","Deudas"],["graficas","Graficas"],["resumen","Resumen"],["historial","Historial"]].map(([k,l]) => (
               <button key={k} className={`fm-tab ${tab===k?"active":""}`} onClick={()=>setTab(k)} style={{
                 flex:1, minWidth:70, padding:"13px 0", background:"none", border:"none", fontSize:10.5, letterSpacing:1, textTransform:"uppercase",
                 fontFamily:C.font, fontWeight:tab===k?"700":"400", color:tab===k?C.primary:C.textMid,
@@ -910,9 +926,11 @@
 
             {/* GASTOS */}
             {tab==="gastos" && (() => {
-              const fijosView = expensesResolved.filter(e=>e.cat==="fijo").filter(matchesGastosFiltro).sort((a,b)=>a.dueDay-b.dueDay);
-              const subsView = expensesResolved.filter(e=>e.cat==="suscripcion").filter(matchesGastosFiltro).sort((a,b)=>a.dueDay-b.dueDay);
-              const varExpView = varExp.filter(matchesGastosFiltro).sort((a,b)=>a.dueDay-b.dueDay);
+              const isPending = e => paidAmt(e) < e.amount;
+              const pendFilter = e => !soloP || isPending(e);
+              const fijosView = expensesResolved.filter(e=>e.cat==="fijo").filter(matchesGastosFiltro).filter(pendFilter).sort((a,b)=>a.dueDay-b.dueDay);
+              const subsView = expensesResolved.filter(e=>e.cat==="suscripcion").filter(matchesGastosFiltro).filter(pendFilter).sort((a,b)=>a.dueDay-b.dueDay);
+              const varExpView = varExp.filter(matchesGastosFiltro).filter(pendFilter).sort((a,b)=>a.dueDay-b.dueDay);
               const fijosViewTotal = fijosView.reduce((a,e)=>a+e.amount,0);
               const subsViewTotal = subsView.reduce((a,e)=>a+e.amount,0);
               const varViewTotal = varExpView.reduce((a,e)=>a+e.amount,0);
@@ -959,6 +977,14 @@
                   {[["todos","Nosotros",C.primary],["juanma",TITULARES.juanma.label,TITULARES.juanma.color],["mari",TITULARES.mari.label,TITULARES.mari.color]].map(([k,label,color])=>(
                     <button key={k} onClick={()=>setGastosFiltro(k)} style={{ flex:1, padding:"9px 6px", borderRadius:10, cursor:"pointer", fontFamily:C.font, fontSize:13, fontWeight:"600", border:`1.5px solid ${gastosFiltro===k?color:C.borderMid}`, background:gastosFiltro===k?color+"22":"none", color:gastosFiltro===k?color:C.textMid }}>{label}</button>
                   ))}
+                </div>
+
+                {/* FILTRO PENDIENTES */}
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginTop:14 }}>
+                  <button onClick={()=>setSoloP(!soloP)} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:20, border:`1.5px solid ${soloP?C.warning:C.borderMid}`, background:soloP?C.warning+"22":"none", color:soloP?C.warning:C.textMid, cursor:"pointer", fontFamily:C.font, fontSize:13, fontWeight:"600" }}>
+                    <span style={{ fontSize:15 }}>{soloP?"🔴":"⚪"}</span> Solo pendientes
+                  </button>
+                  {soloP && <span style={{ fontSize:12, color:C.textDim }}>Mostrando lo que falta pagar</span>}
                 </div>
 
                 {/* FIJOS */}
@@ -1145,6 +1171,128 @@
             )}
 
             {/* CUENTAS */}
+            {/* AHORRO */}
+            {tab==="ahorro" && (
+              <div style={{ marginTop:20 }}>
+                {/* Total en ahorro */}
+                {(() => {
+                  const totalAhorrado = bolsillos.reduce((a,b)=>a+b.saved,0);
+                  const totalMeta     = bolsillos.reduce((a,b)=>a+(b.goal||0),0);
+                  return (
+                    <div style={{ ...card, marginBottom:20, textAlign:"center", padding:"22px 16px" }}>
+                      <div style={{ fontSize:11, color:C.textMid, letterSpacing:2, textTransform:"uppercase", marginBottom:6 }}>Total ahorrado</div>
+                      <div style={{ fontSize:36, fontWeight:"700", color:C.positive }}>{usd(totalAhorrado)}</div>
+                      {totalMeta>0 && (
+                        <>
+                          <div style={{ fontSize:13, color:C.textDim, marginTop:4 }}>Meta total: {usd(totalMeta)}</div>
+                          <div style={{ height:8, background:C.bgDeep, borderRadius:4, overflow:"hidden", marginTop:12 }}>
+                            <div style={{ height:"100%", width:`${Math.min(100,(totalAhorrado/totalMeta)*100)}%`, background:C.positive, borderRadius:4, transition:"width .5s" }} />
+                          </div>
+                          <div style={{ fontSize:12, color:C.textDim, marginTop:6 }}>{Math.round((totalAhorrado/totalMeta)*100)}% de la meta total</div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Botón nuevo bolsillo */}
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+                  <span style={lbl}>Bolsillos</span>
+                  <button style={btn()} onClick={()=>setShowAddBolsillo(!showAddBolsillo)}>+ Bolsillo</button>
+                </div>
+
+                {showAddBolsillo && (
+                  <div style={{ ...card, marginBottom:16, borderColor:C.primary }}>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
+                      <input placeholder="Nombre (ej. Vacaciones)" value={newBolsillo.name} onChange={e=>setNewBolsillo(p=>({...p,name:e.target.value}))} style={inp} />
+                      <input placeholder="Meta $ (opcional)" type="number" value={newBolsillo.goal} onChange={e=>setNewBolsillo(p=>({...p,goal:e.target.value}))} style={inp} />
+                    </div>
+                    <div style={{ display:"flex", gap:8, marginBottom:12 }}>
+                      {["#6366f1","#22c55e","#f59e0b","#ef4444","#06b6d4","#ec4899"].map(color=>(
+                        <button key={color} onClick={()=>setNewBolsillo(p=>({...p,color}))} style={{ width:28, height:28, borderRadius:"50%", background:color, border:newBolsillo.color===color?"3px solid #fff":"2px solid transparent", cursor:"pointer" }} />
+                      ))}
+                    </div>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                      <button onClick={()=>setShowAddBolsillo(false)} style={sbtn}>Cancelar</button>
+                      <button onClick={()=>{
+                        if (!newBolsillo.name) return;
+                        setBolsillos(p=>[...p,{id:Date.now(),name:newBolsillo.name,goal:parseFloat(newBolsillo.goal)||0,color:newBolsillo.color,saved:0,deposits:[]}]);
+                        setNewBolsillo({name:"",goal:"",color:"#6366f1"});
+                        setShowAddBolsillo(false);
+                      }} style={btn()}>Crear bolsillo</button>
+                    </div>
+                  </div>
+                )}
+
+                {bolsillos.length===0 && !showAddBolsillo && (
+                  <div style={{ textAlign:"center", padding:"40px 0", color:C.textDim }}>
+                    <div style={{ fontSize:40, marginBottom:12 }}>🪙</div>
+                    <div style={{ fontSize:16, color:C.textMid }}>Sin bolsillos todavía</div>
+                    <div style={{ fontSize:13, marginTop:6 }}>Crea un bolsillo para cada meta de ahorro</div>
+                  </div>
+                )}
+
+                {bolsillos.map(b => {
+                  const pct = b.goal>0 ? Math.min(100,(b.saved/b.goal)*100) : 0;
+                  const depositInput = ahorroDeposit[b.id] || "";
+                  return (
+                    <div key={b.id} style={{ ...card, marginBottom:14, borderTop:`3px solid ${b.color}` }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
+                        <div>
+                          <div style={{ fontSize:16, fontWeight:"600" }}>{b.name}</div>
+                          {b.goal>0 && <div style={{ fontSize:12, color:C.textDim, marginTop:2 }}>Meta: {usd(b.goal)}</div>}
+                        </div>
+                        <div style={{ textAlign:"right" }}>
+                          <div style={{ fontSize:22, fontWeight:"700", color:b.color }}>{usd(b.saved)}</div>
+                          {b.goal>0 && <div style={{ fontSize:12, color:C.textDim }}>{Math.round(pct)}%</div>}
+                        </div>
+                      </div>
+
+                      {b.goal>0 && (
+                        <div style={{ height:8, background:C.bgDeep, borderRadius:4, overflow:"hidden", marginBottom:12 }}>
+                          <div style={{ height:"100%", width:`${pct}%`, background:b.color, borderRadius:4, transition:"width .5s" }} />
+                        </div>
+                      )}
+
+                      {/* Agregar depósito */}
+                      <div style={{ display:"flex", gap:8, marginBottom: b.deposits&&b.deposits.length>0?10:0 }}>
+                        <input
+                          type="number" placeholder="Agregar $"
+                          value={depositInput}
+                          onChange={e=>setAhorroDeposit(p=>({...p,[b.id]:e.target.value}))}
+                          onKeyDown={e=>{ if(e.key==="Enter" && depositInput){ const amt=parseFloat(depositInput)||0; if(!amt) return; const dep={id:Date.now(),amount:amt,date:new Date().toLocaleDateString("es",{day:"numeric",month:"short"})}; setBolsillos(p=>p.map(x=>x.id===b.id?{...x,saved:x.saved+amt,deposits:[dep,...(x.deposits||[])]}:x)); setAhorroDeposit(p=>({...p,[b.id]:""})); }}}
+                          style={{...inp, flex:1}}
+                        />
+                        <button onClick={()=>{
+                          const amt=parseFloat(depositInput)||0; if(!amt) return;
+                          const dep={id:Date.now(),amount:amt,date:new Date().toLocaleDateString("es",{day:"numeric",month:"short"})};
+                          setBolsillos(p=>p.map(x=>x.id===b.id?{...x,saved:x.saved+amt,deposits:[dep,...(x.deposits||[])]}:x));
+                          setAhorroDeposit(p=>({...p,[b.id]:""}));
+                        }} style={btn()}>Depositar</button>
+                        <button onClick={()=>setBolsillos(p=>p.filter(x=>x.id!==b.id))} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", fontSize:20 }}>×</button>
+                      </div>
+
+                      {/* Historial de depósitos */}
+                      {b.deposits && b.deposits.length>0 && (
+                        <div style={{ marginTop:8 }}>
+                          <div style={{ fontSize:10, color:C.textDim, letterSpacing:1.5, textTransform:"uppercase", marginBottom:6 }}>Historial</div>
+                          {b.deposits.map(dep=>(
+                            <div key={dep.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom:`1px solid ${C.border}` }}>
+                              <span style={{ fontSize:13, color:C.textMid }}>{dep.date}</span>
+                              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                                <span style={{ fontSize:14, fontWeight:"600", color:b.color }}>+{usd(dep.amount)}</span>
+                                <button onClick={()=>setBolsillos(p=>p.map(x=>x.id===b.id?{...x,saved:x.saved-dep.amount,deposits:x.deposits.filter(d=>d.id!==dep.id)}:x))} style={{ background:"none", border:"none", color:C.textDim, cursor:"pointer", fontSize:16 }}>×</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {tab==="cuentas" && (
               <div style={{ marginTop:20 }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
